@@ -1,0 +1,39 @@
+{
+	"nodes":[
+		{"id":"dd0323d741de0dfc","type":"text","text":"# Radomized Tournament\n- Agents get matched at random\n- Strategy mutation at population scale","x":-413,"y":-440,"width":380,"height":200},
+		{"id":"0d7f149a9a648027","type":"text","text":"# 2D - Spatial\n- Get matched to (von Neuemann) neighbors\n- Strategy mutation at local scale","x":23,"y":-440,"width":287,"height":200},
+		{"id":"83fabe1f29d1407c","type":"text","text":"# Agent Interaction","x":-195,"y":-700,"width":325,"height":60},
+		{"id":"c5584323d70425fc","type":"file","file":"Poker game Layout.canvas","x":-233,"y":-40,"width":400,"height":333},
+		{"id":"f3297073198aaec6","type":"text","text":"# Poker model\n","x":-171,"y":-858,"width":277,"height":76},
+		{"id":"134fc6d76ce3afc2","type":"text","text":"# Diversity of strategies","x":-660,"y":-1280,"width":354,"height":80},
+		{"id":"2d874a6f48051f40","type":"text","text":"# Accumulation of Wealth","x":-226,"y":-1280,"width":387,"height":80},
+		{"id":"e6c8e44d8444a42d","type":"text","text":"# ???","x":306,"y":-1280,"width":250,"height":80},
+		{"id":"c17b7a0e8536bf11","type":"text","text":"# Visualization","x":-171,"y":-1025,"width":277,"height":60},
+		{"id":"63affba0d9f02ca7","x":-568,"y":-853,"width":288,"height":66,"type":"text","text":"# Agent Strategies"},
+		{"id":"59d933d19e8b7867","x":-1025,"y":-782,"width":365,"height":110,"type":"text","text":"# Abstract Strategies\n- Eg. Aggressive, passive, etc"},
+		{"id":"d6518d9e92888139","x":-1025,"y":-1025,"width":365,"height":143,"type":"text","text":"# Mixed Extensive form strategies\n- With Limited recall"},
+		{"id":"eadeafb5d020c8c5","type":"text","text":"# Agent Mutation","x":-970,"y":-303,"width":310,"height":55},
+		{"id":"6dc540ff36dd406f","type":"text","text":"# Adaptive\n- Let losing individuals take on (part of) the winning strategy","x":-1440,"y":-357,"width":294,"height":164},
+		{"id":"c51afd47cb3957e9","type":"text","text":"# Evolutionary\n- Define some genotype (eg. Tuple of strategies and associated weights)\n- Define some fitness metric (eg. Number of games won)\n- Remove low fitness individuals and create offspring from high fitness individuals through recombination and/ or mutation","x":-1440,"y":-118,"width":294,"height":376},
+		{"id":"ac59a3189067c5bc","type":"text","text":"# Random Muatation\n- Let a losing individual randomly adjust it's strategy by some amount","x":-1440,"y":-661,"width":294,"height":208}
+	],
+	"edges":[
+		{"id":"dd4387153915ec56","fromNode":"83fabe1f29d1407c","fromSide":"bottom","toNode":"0d7f149a9a648027","toSide":"top","label":"b."},
+		{"id":"8b508e9e331f21e0","fromNode":"83fabe1f29d1407c","fromSide":"bottom","toNode":"dd0323d741de0dfc","toSide":"top","label":"a."},
+		{"id":"c01a2327724cf772","fromNode":"0d7f149a9a648027","fromSide":"bottom","toNode":"c5584323d70425fc","toSide":"top"},
+		{"id":"0e0426fd518c7c79","fromNode":"dd0323d741de0dfc","fromSide":"bottom","toNode":"c5584323d70425fc","toSide":"top"},
+		{"id":"5c2ba483756ac0d3","fromNode":"f3297073198aaec6","fromSide":"bottom","toNode":"83fabe1f29d1407c","toSide":"top"},
+		{"id":"b51f6cf8f864d5f4","fromNode":"83fabe1f29d1407c","fromSide":"left","toNode":"eadeafb5d020c8c5","toSide":"right"},
+		{"id":"916f730cd5b6c94a","fromNode":"eadeafb5d020c8c5","fromSide":"left","toNode":"c51afd47cb3957e9","toSide":"right","toEnd":"none","label":"a."},
+		{"id":"376894e1799afd5c","fromNode":"eadeafb5d020c8c5","fromSide":"left","toNode":"6dc540ff36dd406f","toSide":"right","toEnd":"none","label":"b."},
+		{"id":"cc20d8bcfd38de17","fromNode":"eadeafb5d020c8c5","fromSide":"left","toNode":"ac59a3189067c5bc","toSide":"right","toEnd":"none","label":"c."},
+		{"id":"2b8b5d22bf345c57","fromNode":"f3297073198aaec6","fromSide":"top","toNode":"c17b7a0e8536bf11","toSide":"bottom"},
+		{"id":"a9cbe6e342a208f9","fromNode":"c17b7a0e8536bf11","fromSide":"top","toNode":"134fc6d76ce3afc2","toSide":"bottom"},
+		{"id":"61bbefcc574e4629","fromNode":"c17b7a0e8536bf11","fromSide":"top","toNode":"2d874a6f48051f40","toSide":"bottom"},
+		{"id":"7ef597391c4d92f8","fromNode":"c17b7a0e8536bf11","fromSide":"top","toNode":"e6c8e44d8444a42d","toSide":"bottom"},
+		{"id":"70287cf59dcbdb16","fromNode":"c5584323d70425fc","fromSide":"left","toNode":"eadeafb5d020c8c5","toSide":"right"},
+		{"id":"f56d6f44ebd08e20","fromNode":"f3297073198aaec6","fromSide":"left","toNode":"63affba0d9f02ca7","toSide":"right"},
+		{"id":"3c3ab46b74c40611","fromNode":"63affba0d9f02ca7","fromSide":"left","toNode":"d6518d9e92888139","toSide":"right","label":"a."},
+		{"id":"ac8857f179f6f464","fromNode":"63affba0d9f02ca7","fromSide":"left","toNode":"59d933d19e8b7867","toSide":"right","label":"b."}
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"nodes":[
+		{"id":"9a84feb28ae843dd","type":"text","text":"# Game flow\n- Deal Hole to each Agent\n- Blind betting round\n- Deal Flop\n- Regular betting round\n- Deal Turn\n- Regular betting round\n- Deal River\n- Regular betting round\n- Scoring\n- Payout","x":-432,"y":-303,"width":337,"height":400},
+		{"id":"6946920fba48fc64","type":"text","text":"# Actions\n- Check (**Only if $\\max(bet) == bet_i$**)\n- Call\n- Raise (**Between $[max(bet), n]$**)\n- All in (*Create sidepot*)","x":-1240,"y":-380,"width":321,"height":342},
+		{"id":"ffce2b40e4b28870","type":"text","text":"# Knowledge\n- Own properties\n- Remaining chips for all N players\n- Cards in $\\hat{D}$\n- Amount of remaining cards in $\\hat{d}$\n- Dealt community cards\n- Timestamp (T,t)\n- functions s(), f(), g(), h().","x":-851,"y":-380,"width":278,"height":342},
+		{"id":"596490332255413a","type":"text","text":"# Agent\n### Has\n- strategy $\\mathbf{s} \\in \\mathbf{S}$\n-  n Chips\n- Bet b $\\in [0,n]$ chips\n- Hole $\\hat{g}\\subset{\\hat{D}}, \\hat{g} \\cap \\hat{d} = \\hat{g} \\cap \\hat{c} = \\emptyset$  (2 Cards from deck)\n- Hand $\\hat{h} \\subset (\\hat{g} \\cup \\hat{c}),  \\hat{h} \\in \\mathbf{H}$ Such that $S_i$ is maximized for player i.","x":-837,"y":-1000,"width":250,"height":435},
+		{"id":"634ac56c3b41cda4","type":"text","text":"# Payout\n- Subpots are resolved according to player scores","x":80,"y":33,"width":360,"height":129},
+		{"id":"e5d80bb9d030917d","type":"text","text":"# Scoring\n- Player hands are scored ","x":80,"y":-103,"width":360,"height":129},
+		{"id":"dad8b84d77efb856","type":"text","text":"# Regular Betting round\n\n- Players take turns until all active bets are equal or playing for a subpot. ","x":80,"y":-246,"width":360,"height":143},
+		{"id":"8363cddeec180524","type":"text","text":"# Blind Betting round\n- Take small and big blinds\n- commence regular betting round with $\\max(\\text{bet}_{T,t=0}) = g(T)$","x":80,"y":-404,"width":360,"height":158},
+		{"id":"e9d8c83a7e300457","type":"text","text":"# [[2. Poker Game| Poker Game]]\n### Has\n- $N$ Agents\n- Base deck $\\hat{D}$ (eg. 52 Standard playing cards)\n- Current deck $\\hat{d} \\subset \\hat{D}$\n- Community cards $\\hat{c} = (\\hat{f}\\cup\\hat{t}\\cup\\hat{c}) \\subset\\hat{D}, \\hat{c} \\cap \\hat{d} = \\emptyset$\n\t- Flop $\\hat{f}$ (3 cards from deck)\n\t- Turn $\\hat{t}$ (1 Card from deck)\n\t- River $\\hat{r}$ (1 Card from deck)\n- Pot $\\sum_{i=1}^N{b_i}$\n- up to $N - 1$ sidepots\n- Timestamp $(T,t)$\n\t- Inter-round time $T$\n\t- Inter turn time $t$\n- Small blind function $f(T)$\n- Big blind function $g(T)$\n- Dealer assignment function $h(T)$\n- Player score function $s(\\hat{g},\\hat{c}, \\hat{D}, t)$ mapping an objective private score to a players hand based on hole and community cards and hand probabilities\n- Final score function $\\mathbf{S}(\\mathbf{H})$ mapping all active hands to a final score in line with poker rules","x":-467,"y":-1152,"width":407,"height":740}
+	],
+	"edges":[
+		{"id":"6c3e9353c69ad4cb","fromNode":"596490332255413a","fromSide":"bottom","toNode":"6946920fba48fc64","toSide":"top"},
+		{"id":"9fd80deba89ab0ac","fromNode":"e9d8c83a7e300457","fromSide":"left","toNode":"596490332255413a","toSide":"right"},
+		{"id":"ea7edba2795e09f6","fromNode":"e9d8c83a7e300457","fromSide":"bottom","toNode":"9a84feb28ae843dd","toSide":"top"},
+		{"id":"3c9128d7ab4dcc7c","fromNode":"9a84feb28ae843dd","fromSide":"right","toNode":"8363cddeec180524","toSide":"left"},
+		{"id":"da7e03f028e8a323","fromNode":"9a84feb28ae843dd","fromSide":"right","toNode":"dad8b84d77efb856","toSide":"left"},
+		{"id":"9339e3c04e5ce47a","fromNode":"9a84feb28ae843dd","fromSide":"right","toNode":"e5d80bb9d030917d","toSide":"left"},
+		{"id":"e5c9981fdfbd09a0","fromNode":"596490332255413a","fromSide":"bottom","toNode":"ffce2b40e4b28870","toSide":"top"},
+		{"id":"afd7e86a75b7fdd3","fromNode":"9a84feb28ae843dd","fromSide":"right","toNode":"634ac56c3b41cda4","toSide":"left"}
+	]
+}
