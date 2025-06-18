@@ -4,13 +4,17 @@ import PokerPy
 
 from typing import Tuple, List, Dict, Any
 
-BETLIM   = 0
-RAISELIM = 1
+RAISELIM = 0
+CALL_LIM = 1
 
 MAX_BET = 400
 
 class AuctionPlayer:
+    """ Poker Playing agent using "poker-as-an-auction" model
 
+    Players raise up to ther betlim and 
+    
+    """
     #{Hand Indexes}#####################
     HAND_TO_INDEX = {
         "Royal Flush":    9,
@@ -29,8 +33,8 @@ class AuctionPlayer:
         self.RNG = rng
 
         self.strategy     = np.zeros((2, 10), float)
-        self.strategy[BETLIM, :] = self.randomStrat(50, 150)
-        self.strategy[RAISELIM,:] = self.randomStrat(150, 200)
+        self.strategy[RAISELIM, :] = self.randomStrat(50, 150)
+        self.strategy[CALL_LIM,:] = self.randomStrat(150, 200)
         self.balances     = np.zeros(10, float)
 
         self.handIndex   = None
@@ -84,7 +88,7 @@ class AuctionPlayer:
         """
         Uniform random step update function.
         Randomly chooses a point in the strategy to update, then samples the raise and bet points from
-        an uniform distribution. If bet ever is to go below raiselim, swap the values.
+        an uniform distribution. If call ever is to go below raiselim, swap the values.
 
         Not a strong strategy, but easy to implement and a good boilerplate example
         """
@@ -105,8 +109,8 @@ class AuctionPlayer:
 
         newStrat = np.asarray((self.RNG.uniform(lowBet, highBet), self.RNG.uniform(lowRaise, highRaise)))
 
-        self.strategy[BETLIM, updateIndex]   = np.max(newStrat)
-        self.strategy[RAISELIM, updateIndex] = np.min(newStrat)
+        self.strategy[RAISELIM, updateIndex]   = np.max(newStrat)
+        self.strategy[CALL_LIM, updateIndex] = np.min(newStrat)
 
     def _null(self, **kwp):
         """

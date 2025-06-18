@@ -5,7 +5,7 @@ from operator import itemgetter
 import PokerPy
 
 from .deck import Deck
-from .agents import AuctionPlayer, BETLIM, RAISELIM
+from .agents import AuctionPlayer, RAISELIM, CALL_LIM
 
 from typing import List, Tuple
 
@@ -40,15 +40,15 @@ class Game:
             strats[:, i] = player.getBet(handName)
 
         # Game will always raise up to the lowest bet. Strats can be adjusted as to start where the lowest bet ends.
-        pot    = np.ones_like(strats[0,:]) * np.min(strats[BETLIM])
+        pot    = np.ones_like(strats[0,:]) * np.min(strats[RAISELIM])
         strats = strats - pot
 
-        maxBet = max(strats[BETLIM,:])
-        folds = strats[RAISELIM, :] < maxBet
+        maxBet = max(strats[RAISELIM,:])
+        folds = strats[CALL_LIM, :] < maxBet
 
-        # Bets increase up to raiselim for folding players
+        # Bets increase up to CALL_LIM for folding players
         # Otherwise, up to the highest maxbet
-        pot += folds * strats[RAISELIM, :]
+        pot += folds * strats[CALL_LIM, :]
         pot += np.invert(folds) * maxBet
 
         handScores = handScores * np.invert(folds) # Multiply all folded hands by 0
