@@ -3,7 +3,7 @@ import PokerPy
 
 from typing import Optional, List, Tuple, Union, Type
 
-type Card = PokerPy.Card
+Card = Type[PokerPy.Card]
 
 class Deck:
     """
