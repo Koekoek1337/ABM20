@@ -14,10 +14,12 @@ type Card = PokerPy.Card
 class Game:
     def __init__(self, players: List[AuctionPlayer], rng:np.random.Generator):
         self.RNG=rng
+        self.deck = Deck()
+        self.setup(players)        
+
+    def setup(self, players: List[AuctionPlayer]):
         self.players = players
         self._nPlayers = len(players)
-
-        self.deck = Deck(nPlayers=self._nPlayers)
         self.deck.shuffle(self.RNG)
 
     
@@ -75,7 +77,6 @@ class Game:
             yields = [np.sum(handYields) for strat, handYields in data[-1]]
             loss   = yields == np.min(yields)
 
-            print(loss)
             for i, player in enumerate(self.players): player.gameEnd(loss[i])
             
             if verbose: print(*yields)
