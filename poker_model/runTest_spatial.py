@@ -44,38 +44,40 @@ if __name__ == "__main__":
                 }
         
         # Add text annotations for each cell
+        # TODO: there's a problem in agents placement, and apparently their a.pos is not updated
+        #       thus no details on the text are shown
         for x in range(M.gridDim[0]):
             for y in range(M.gridDim[1]):
-                # Display profit value
                 profit_val = grid[x, y]
-                
+
                 if (x, y) in agents_info:
                     agent_info = agents_info[(x, y)]
                     strategy = agent_info['strategy']
-                    
-                    # Show key strategy parameters (averaged across hands)
+                    agent = agent_info['agent']
+
                     avg_raise = np.mean(strategy[0, :])  # RAISELIM
                     avg_call = np.mean(strategy[1, :])   # CALL_LIM
                     avg_bluff_prob = np.mean(strategy[2, :]) / 400 * 100  # BLUFF_PROB as %
                     avg_bluff_size = np.mean(strategy[3, :])  # BLUFF_SIZE
-                    
-                    # Create text to display
+
+                    risk_aversion = getattr(agent, 'risk_aversion', None)
+                    risk_av_text = f"RA:{risk_aversion:.2f}" if risk_aversion is not None else ""
+
                     text = f"${profit_val:.0f}\n"
                     text += f"R:{avg_raise:.0f}\n"
-                    text += f"C:{avg_call:.0f}\n" 
+                    text += f"C:{avg_call:.0f}\n"
                     text += f"Bl:{avg_bluff_prob:.0f}%\n"
-                    text += f"Bs:{avg_bluff_size:.0f}"
-                    
-                    # Choose text color based on background
+                    text += f"Bs:{avg_bluff_size:.0f}\n"
+                    text += risk_av_text
+
                     text_color = 'white' if profit_val < 0 else 'black'
-                    
-                    ax.text(y, x, text, ha='center', va='center', 
-                           fontsize=8, color=text_color, weight='bold')
+
+                    ax.text(y, x, text, ha='center', va='center',
+                            fontsize=8, color=text_color, weight='bold')
                 else:
-                    # Empty cell
-                    ax.text(y, x, f"${profit_val:.0f}\nEmpty", 
-                           ha='center', va='center', fontsize=8, color='gray')
-        
+                    ax.text(y, x, f"${profit_val:.0f}\nEmpty",
+                            ha='center', va='center', fontsize=8, color='gray')
+
         # Set labels and title
         ax.set_title(f"Step {frame_idx + 1} - Agent Strategies & Profits\n"
                     f"R=Raise Limit, C=Call Limit, Bl=Bluff %, Bs=Bluff Size", 
@@ -98,7 +100,7 @@ if __name__ == "__main__":
     
     # Add overall statistics
     total_profits = [np.sum(grid) for grid in M.profit_grids]
-    print(f"\nTotal profit evolution: {total_profits}")
+    # print(f"\nTotal profit evolution: {total_profits}")
     print(f"Final agent positions and strategies:")
     
     for i, agent in enumerate(M.agents):

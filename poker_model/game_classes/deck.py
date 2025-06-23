@@ -3,7 +3,7 @@ import PokerPy
 
 from typing import Optional, List, Tuple, Union, Type
 
-type Card = PokerPy.Card
+# type Card = PokerPy.Card
 
 class Deck:
     """
@@ -39,7 +39,7 @@ class Deck:
         """"The index of the shuffled card to be dealt"""
 
 
-    def buildDeck(self, suits:int, ranks:int) -> List[Card]:
+    def buildDeck(self, suits:int, ranks:int) -> List[PokerPy.Card]:
         """
         Builds a deck of an arbitrary number of suits and ranks.
         """
@@ -62,7 +62,7 @@ class Deck:
         self.dealIndex = 0
 
 
-    def deal(self) -> Union[Card, None]:
+    def deal(self) -> Union[PokerPy.Card, None]:
         """
         Returns a single card from the dealbuffer and advances the bufferindex by 1.
         Returns None if a card is dealt at the end of the index.
