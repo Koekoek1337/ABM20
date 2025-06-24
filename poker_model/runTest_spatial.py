@@ -4,11 +4,11 @@ import matplotlib.animation as animation
 import numpy as np
 
 if __name__ == "__main__":
-    M = SpatialModel(n_players=9, n_rounds=1000, gridDim=(3,3), seed=42)
-    GAMES = 10  # Run more games to see evolution
+    M = SpatialModel( gridDim=(10, 10), n_rounds=1000, seed=42, ra_bounds=(0, 1))
+    GAMES = 20  # Run more games to see evolution
     
     for game in range(GAMES):
-        print(f"Running game {game+1}/{GAMES}")
+        print(f"Running games {game+1}/{GAMES}")
         M.step()
 
     # Create enhanced Matplotlib animation
@@ -40,44 +40,48 @@ if __name__ == "__main__":
                 agents_info[(x, y)] = {
                     'profit': grid[x, y],
                     'strategy': agent.strategy,
-                    'agent': agent
+                    'agent': agent,
+                    'risk_aversion': agent.risk_aversion
                 }
         
         # Add text annotations for each cell
-        # TODO: there's a problem in agents placement, and apparently their a.pos is not updated
-        #       thus no details on the text are shown
         for x in range(M.gridDim[0]):
             for y in range(M.gridDim[1]):
+                # Display profit value
                 profit_val = grid[x, y]
-
+                
                 if (x, y) in agents_info:
                     agent_info = agents_info[(x, y)]
                     strategy = agent_info['strategy']
-                    agent = agent_info['agent']
-
+                    
+                    # Show key strategy parameters (averaged across hands)
+                    """
                     avg_raise = np.mean(strategy[0, :])  # RAISELIM
                     avg_call = np.mean(strategy[1, :])   # CALL_LIM
                     avg_bluff_prob = np.mean(strategy[2, :]) / 400 * 100  # BLUFF_PROB as %
                     avg_bluff_size = np.mean(strategy[3, :])  # BLUFF_SIZE
-
-                    risk_aversion = getattr(agent, 'risk_aversion', None)
-                    risk_av_text = f"RA:{risk_aversion:.2f}" if risk_aversion is not None else ""
-
-                    text = f"${profit_val:.0f}\n"
+                    """
+                    
+                    
+                    # Create text to display
+                    text  = f"${profit_val:.0f}\n"
+                    text += f"RA: {agent_info['risk_aversion']:.2f}\n"
+                    """
                     text += f"R:{avg_raise:.0f}\n"
-                    text += f"C:{avg_call:.0f}\n"
+                    text += f"C:{avg_call:.0f}\n" 
                     text += f"Bl:{avg_bluff_prob:.0f}%\n"
-                    text += f"Bs:{avg_bluff_size:.0f}\n"
-                    text += risk_av_text
-
+                    text += f"Bs:{avg_bluff_size:.0f}"
+                    """
+                    # Choose text color based on background
                     text_color = 'white' if profit_val < 0 else 'black'
-
-                    ax.text(y, x, text, ha='center', va='center',
-                            fontsize=8, color=text_color, weight='bold')
+                    
+                    ax.text(y, x, text, ha='center', va='center', 
+                           fontsize=8, color=text_color, weight='bold')
                 else:
-                    ax.text(y, x, f"${profit_val:.0f}\nEmpty",
-                            ha='center', va='center', fontsize=8, color='gray')
-
+                    # Empty cell
+                    ax.text(y, x, f"${profit_val:.0f}\nEmpty", 
+                           ha='center', va='center', fontsize=8, color='gray')
+        
         # Set labels and title
         ax.set_title(f"Step {frame_idx + 1} - Agent Strategies & Profits\n"
                     f"R=Raise Limit, C=Call Limit, Bl=Bluff %, Bs=Bluff Size", 
@@ -96,13 +100,13 @@ if __name__ == "__main__":
     
     # Create animation
     ani = animation.FuncAnimation(fig, update_plot, frames=len(M.profit_grids), 
-                                 interval=10, repeat=True, blit=False)
+                                 interval=20, repeat=True, blit=False)
     
     # Add overall statistics
     total_profits = [np.sum(grid) for grid in M.profit_grids]
-    # print(f"\nTotal profit evolution: {total_profits}")
+    print(f"\nTotal profit evolution: {total_profits}")
     print(f"Final agent positions and strategies:")
-    
+    """
     for i, agent in enumerate(M.agents):
         if hasattr(agent, 'pos'):
             print(f"Agent {i} at {agent.pos}:")
@@ -112,7 +116,7 @@ if __name__ == "__main__":
             print(f"  Avg Bluff Prob: {np.mean(strategy[2, :]/400*100):.1f}%")
             print(f"  Avg Bluff Size: {np.mean(strategy[3, :]):.1f}")
             print(f"  Final Profit: {M.profit_grids[-1][agent.pos]:.1f}")
-    
+    """
     plt.tight_layout()
     plt.show()
     

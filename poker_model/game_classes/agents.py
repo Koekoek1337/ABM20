@@ -1,7 +1,16 @@
 import numpy as np
-from mesa import Agent, Model
+from mesa import Agent
+from mesa.space import MultiGrid
+
+from typing import List
+
+RAISELIM   = 0
+CALL_LIM   = 1
+BLUFF_PROB = 2
+BLUFF_SIZE = 3
 
 MAX_BET = 400
+
 HANDS = 10
 
 class AuctionPlayer(Agent):
@@ -18,28 +27,32 @@ class AuctionPlayer(Agent):
         "High Card":      0
     }
 
-    def __init__(self, model, update_mode="null", update_parms=None, risk_aversion=0.5):
-        self.model = model
+    def __init__(self, model, risk_aversion, update_mode="null", update_parms=None, *args, **kwargs):
+        super().__init__(model)
         self.update_mode = update_mode
-        self.update_parms = update_parms or {}
+        self.update_parms= update_parms or {}
         self.risk_aversion = risk_aversion
-        self.pos = None
+        
+        # Keep original strategy structure for backward compatibility
+        self.strategy    = self._random_strat()
+        self.balances    = np.zeros(HANDS)
+        self.hand_index  = 0
+    
+    def _random_strat(self):
+        s = np.zeros((4, HANDS))
+        s[RAISELIM]   = self.rng.uniform(0, MAX_BET, HANDS)
+        s[CALL_LIM]   = self.rng.uniform(0, MAX_BET, HANDS)
+        s[BLUFF_PROB] = self.rng.uniform(0, MAX_BET, HANDS)
+        s[BLUFF_SIZE] = self.rng.uniform(0, MAX_BET, HANDS)
+        return self._enforce_order(s)
 
-        self.n_hand_types = 10  # or however many your game defines (e.g. PokerPy.HAND_TYPES)
-        self.balances = np.zeros(100)  # stores profits per round, or adjust if needed
-        self.strategy = self._init_strategy()
+    def _enforce_order(self, s):
+        low  = np.minimum(s[RAISELIM], s[CALL_LIM])
+        high = np.maximum(s[RAISELIM], s[CALL_LIM])
+        s[RAISELIM], s[CALL_LIM] = low, high
+        return s
 
-    def _init_strategy(self):
-        # Strategy: [aggressiveness, call threshold] per hand type
-        strat = self.model.rng.uniform(0, 1, (2, self.n_hand_types))
-        return self._enforce_order(strat)
-
-    def _enforce_order(self, strat):
-        # Ensure stronger hands have higher bet levels
-        strat[0] = np.sort(strat[0])  # RAISE line increases with hand strength
-        strat[1] = np.sort(strat[1])  # CALL line increases with hand strength
-        return strat
-
+    # New risk aversion helper functions from second implementation
     def _hand_strength(self, hand_name):
         """Normalize hand strength to [0, 1]"""
         return self.HAND_TO_INDEX[hand_name] / (HANDS - 1)
@@ -48,108 +61,230 @@ class AuctionPlayer(Agent):
         """Smooth function mapping [-1, 1] → [0, 1]"""
         return 1 / (1 + np.exp(-a * (x - 0.5)))
 
-    def _raise_amount(self, strength):
-        """Higher hand strength & lower risk aversion → more aggressive raise"""
-        base = self._sigmoid(strength)
-        return MAX_BET * base * (1 - self.risk_aversion)
+    def _risk_adjusted_raise(self, base_raise, strength):
+        """Adjust raise amount based on risk aversion and hand strength"""
+        risk_factor = (1 - self.risk_aversion)
+        strength_bonus = self._sigmoid(strength) * risk_factor
+        return base_raise * (0.5 + 0.5 * strength_bonus)
 
-    def _call_amount(self, strength):
-        """Always >= raise; moderately conservative"""
-        return self._raise_amount(strength) + MAX_BET * 0.1 * (1 - self.risk_aversion)
+    def _risk_adjusted_call(self, base_call, strength):
+        """Adjust call limit based on risk aversion"""
+        risk_factor = (1 - self.risk_aversion)
+        return base_call * (0.7 + 0.3 * risk_factor)
 
-    def _bluff_prob(self, strength):
-        """Lower hand strength → more bluffing if risk-seeking"""
+    def _risk_adjusted_bluff_prob(self, base_prob, strength):
+        """Adjust bluffing probability based on risk aversion"""
         weak = 1 - strength
-        return (1 - self.risk_aversion) * self._sigmoid(weak)
+        risk_bluff_bonus = (1 - self.risk_aversion) * self._sigmoid(weak) * 0.3
+        return (base_prob / MAX_BET) + risk_bluff_bonus
 
-    def _bluff_size(self, strength):
-        """Small bluffs if risk-averse, bigger otherwise"""
-        return MAX_BET * 0.2 + (MAX_BET * 0.5 * (1 - self.risk_aversion))
+    def _risk_adjusted_bluff_size(self, base_size, strength):
+        """Adjust bluff size based on risk aversion"""
+        risk_factor = (1 - self.risk_aversion)
+        return base_size * (0.5 + 0.5 * risk_factor)
 
     def getBet(self, hand_name):
+        idx = self.HAND_TO_INDEX[hand_name]
+        self.hand_index = idx
         strength = self._hand_strength(hand_name)
-        self.hand_index = self.HAND_TO_INDEX[hand_name]
-
-        if self.random.random() < self._bluff_prob(strength):
-            bluff = self._bluff_size(strength)
-            return bluff, bluff
-
-        raise_amt = self._raise_amount(strength)
-        call_amt  = self._call_amount(strength)
-        return raise_amt, call_amt
+        
+        # Apply risk aversion to bluffing decision
+        adjusted_bluff_prob = self._risk_adjusted_bluff_prob(self.strategy[BLUFF_PROB, idx], strength)
+        
+        if self.rng.random() < adjusted_bluff_prob:
+            base_bluff = self.strategy[BLUFF_SIZE, idx]
+            adjusted_bluff = self._risk_adjusted_bluff_size(base_bluff, strength)
+            return adjusted_bluff, adjusted_bluff
+        
+        # Apply risk aversion to normal betting
+        base_raise = self.strategy[RAISELIM, idx]
+        base_call = self.strategy[CALL_LIM, idx]
+        
+        adjusted_raise = self._risk_adjusted_raise(base_raise, strength)
+        adjusted_call = self._risk_adjusted_call(base_call, strength)
+        
+        return adjusted_raise, adjusted_call
 
     def handResult(self, delta):
         self.balances[self.hand_index] += delta
 
-    def gameEnd(self, lost):
-        self.balances[:] = 0
-        # (optional) implement learning here
+    def gameEnd(self, lost, update_mode=None, scores=None, strategies=None):
+        if update_mode == None: update_mode = self.update_mode
+        if lost:
+            if update_mode == "uniform":
+                self._upd_uniform(**self.update_parms)
+
+    def _upd_uniform(self, max_stepsize=10):
+        """
+        Choose a random hand from strategy, then update all parameters of the corresponding hand from an uniform dist.
+        Risk aversion influences the step size.
+        """
+        i = self.rng.integers(0, HANDS)
+        # Risk-averse agents make smaller strategy changes
+        adjusted_stepsize = max_stepsize * (1 - 0.5 * self.risk_aversion)
+        
+        for row in range(4):
+            lo = max(0, self.strategy[row,i] - adjusted_stepsize)
+            hi = min(MAX_BET, self.strategy[row,i] + adjusted_stepsize)
+            self.strategy[row,i] = self.rng.uniform(lo, hi)
+        self.strategy = self._enforce_order(self.strategy)
+
+    def _upd_normal(self, std=10):
+        """
+        TODO
+        """
+        pass
+
+    def getStrat(self):
+        return self.strategy.copy()
 
     def getData(self):
-        """Return scalar data for analysis"""
-        return {"risk_aversion": self.risk_aversion,
-                "balances": self.balances.copy()}
+        """Return strategy, balances, and risk aversion for analysis"""
+        return self.strategy.copy(), self.balances.copy(), self.risk_aversion
+    
+    def challenge(self):
+        """Initiate Poker with neighbors"""
+        players: List[AuctionPlayer] = self.model.grid.get_neighbors(self.pos, moore=False, include_center=True, radius=1)
+        self.model.game.setup(players)
+        self.model.game.playGame(self.model.n_rounds)
+    
+    def neighborhood_adapt(self):
+        """
+        TODO: MAYBE NEVER
+        """
+        pass
 
-    def update_strategy(self, model, lost=False):
-        """Update strategy based on the configured mode and loss condition."""
-        if self.update_mode == "null":
-            return  # Do nothing
+    def _neighbor_selection(self):
+        """
+        Get neighbors with greater fitness than self.
+        """
+        fitness = self.balances.sum()
+        # assert isinstance(self.model.grid, MultiGrid)
+        neighbors = self.model.grid.get_neighbors(self.pos, True, False)
+        neigh_fitnesses = [neighbor.balances.sum() for neighbor in neighbors]
         
-        if self.update_mode == "uniform":
-            self._update_uniform(lost) #, **self.update_parms)
-        elif self.update_mode == "neighbor_copy":
-            self._update_neighbor_copy(model, lost) #, **self.update_parms)
-        else:
-            raise ValueError(f"Unknown update_mode: {self.update_mode}")
-
-    def _update_uniform(self, lost: bool, max_stepsize=10):
-        """Update strategy slightly by perturbing a random parameter, scaled by risk aversion."""
-        if not lost:
-            return  # Only update if the player lost
+        # indexes of neighbors with greater score(fitness) than self
+        i_candidates = [i for i, val in enumerate(neigh_fitnesses) if val > fitness]
         
-        # Pick a random hand
-        i = self.model.rng.integers(0, HANDS)
+        if i_candidates:
+            return [neighbors[i] for i in i_candidates], np.asarray([neigh_fitnesses[i] - fitness for i in i_candidates])
+        return None, None
+    
+    def _recombination(self, stratA, stratB):
+        """TODO: Maybe never, meant for riskfree and derivatives"""
+        pass
 
-        for row in range(self.strategy.shape[0]):
-            current = self.strategy[row, i]
+    def _clampValue(self, value: float) -> float:
+        """
+        Clamps a value between 0 and MAX_BET
+        """
+        if value < 0: return 0
+        if value > MAX_BET: return MAX_BET  
 
-            # Determine range to explore based on risk_aversion
-            step = self.model.rng.uniform(-1, 1) * max_stepsize * (1.0 - self.risk_aversion)
-            new_val = np.clip(current + step, 0, MAX_BET)
 
-            self.strategy[row, i] = new_val
-
-        # If bet parameters are included, you might enforce internal constraints
-        self.strategy = self._enforce_order(self.strategy)
-
-    def _update_neighbor_copy(self, model: Model, lost: bool, copy_prob=0.3, blend=True):
-        if not lost:
-            return
-
-        # Get neighbors via model
-        neighbors = model.get_neighbors(self)
-        if not neighbors:
-            return
-
-        # Filter for more successful neighbors
-        my_score = self.balances.sum()
-        better_neighbors = [n for n in neighbors if n.balances.sum() > my_score]
-
-        if not better_neighbors:
-            return
-
-        # Select a neighbor to copy
-        selected = self.model.rng.choice(better_neighbors)
+class RiskFreeAgent(AuctionPlayer):
+    """
+    Plays poker as an auction with a fixed hand of values.
+    Only raises and does not call.
+    """
+    def __init__(self, model, risk_aversion, update_mode="null", update_parms=None, *args, **kwargs):
+        super().__init__(model, risk_aversion, update_mode, update_parms, *args, **kwargs)
+        self.new_strat = self.strategy.copy()
+    
+    def getBet(self, hand_name):
+        idx = self.HAND_TO_INDEX[hand_name]
+        self.hand_index = idx
+        strength = self._hand_strength(hand_name)
         
-        # Copy one hand's strategy (random column)
-        i = self.model.rng.integers(0, self.strategy.shape[1])
+        # Apply risk aversion to the base strategy value
+        base_bet = self.strategy[idx]
+        adjusted_bet = self._risk_adjusted_raise(base_bet, strength)
+        
+        return adjusted_bet, adjusted_bet
+    
+    def _random_strat(self):
+        return self.rng.uniform(0, MAX_BET, HANDS)
+    
+    def _upd_uniform_random(self, max_stepsize=10):
+        """
+        Choose a random hand value, then raise or lower it.
+        Risk aversion influences step size.
+        """
+        statIndex = self.rng.choice(len(self.strategy))
+        adjusted_stepsize = max_stepsize * (1 - 0.5 * self.risk_aversion)
+        
+        lo = max(0, self.strategy[statIndex] - adjusted_stepsize)
+        hi = min(MAX_BET, self.strategy[statIndex] + adjusted_stepsize)
+        newVal = self.rng.uniform(lo, hi)
+        self.new_strat[statIndex] = newVal
+ 
+    def _upd_normal(self, std = 10):
+        statIndex = self.rng.choice(len(self.strategy))
+        adjusted_std = std * (1 - 0.3 * self.risk_aversion)
+        newVal = self.rng.normal(self.strategy[statIndex], adjusted_std)
+        self.new_strat[statIndex] = self._clampValue(newVal) 
 
-        if blend:
-            alpha = self.model.rng.uniform(0, copy_prob)  # blend weight
-            self.strategy[:, i] = (
-                (1 - alpha) * self.strategy[:, i] + alpha * selected.strategy[:, i]
-            )
-        else:
-            self.strategy[:, i] = selected.strategy[:, i].copy()
+    def _recombination(self, stratA, stratB):
+        """
+        Returns a recombined genotype for the agent.
+        """
+        parents = stratA, stratB
+        coinflip = self.rng.choice(2,2,False)
+        parStart, parEnd = parents[coinflip[0]], parents[coinflip[1]]
 
-        self.strategy = self._enforce_order(self.strategy)
+        splitpoint = self.rng.choice(len(stratA))
+        parStart[splitpoint:] = parEnd[splitpoint:]
+
+        return parStart
+    
+    def neighborhood_adapt(self, recomb_method="self", mut_method=None, mut_mod = 10):
+        """ 
+        Adapt strategy to moore neighborhood based on neighbor fitness
+        """
+        if  mut_method is None: mut_method = self.update_parms
+
+        candidates, scores = self._neighbor_selection()
+
+        if not candidates:
+            return
+        
+        prob_density = scores / scores.sum()
+
+        if recomb_method == "self" or len(candidates) == 1:
+            i_partner =  self.rng.choice(len(candidates), p = prob_density)
+            self.new_strat = self._recombination(self.strategy.copy(), candidates[i_partner].getStrat())
+        elif recomb_method == "fittest":
+            i_partners    =  self.rng.choice(len(candidates), 2, False, p = prob_density)
+            self.new_strat = self._recombination(candidates[i_partners[0]].getStrat(), candidates[i_partners[1]].getStrat())
+
+        if mut_method   == "normal" : self._upd_normal (mut_mod)
+        elif mut_method == "uniform": self._upd_uniform(mut_mod)
+        
+        return
+
+    def updateStrat(self):
+        self.strategy = self.new_strat.copy()
+
+class SingleRiskAgent(RiskFreeAgent):
+    I_RISK = HANDS
+    # Index of risk factor in agent "genotype"
+
+    def __init__(self, model, update_mode="null", update_parms=None, risk_aversion=0.5, *args, **kwargs):
+        super().__init__(model, update_mode, update_parms, risk_aversion, *args, **kwargs)
+
+    def _random_strat(self):
+        return self.rng.uniform(0, MAX_BET, HANDS + 1)
+    
+    def getBet(self, hand_name):
+        idx = self.HAND_TO_INDEX[hand_name]
+        self.hand_index = idx
+        strength = self._hand_strength(hand_name)
+        
+        base_bet = self.strategy[idx]
+        adjusted_raise = self._risk_adjusted_raise(base_bet, strength)
+        
+        # Apply both the internal risk factor and risk_aversion
+        risk_multiplier = 1 + (self.strategy[self.I_RISK] / MAX_BET) * (1 - self.risk_aversion)
+        adjusted_call = adjusted_raise * risk_multiplier
+        
+        return adjusted_raise, adjusted_call
