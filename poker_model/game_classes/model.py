@@ -1,11 +1,14 @@
 import numpy as np
 from mesa import Model
 from mesa.space import MultiGrid
-from .agents import AuctionPlayer
+from .agents import AuctionPlayer, RiskFreeAgent, SingleRiskAgent
 from .game   import Game
 
+
+from typing import List
+
 class SpatialModel(Model):
-    def __init__(self, n_players=9, n_rounds=1, games_per_step=1, gridDim=(3,3), seed=None):
+    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = RiskFreeAgent):
         super().__init__(seed=seed)
         self.rng          = np.random.default_rng(seed)
         self.gridDim      = gridDim
@@ -21,81 +24,38 @@ class SpatialModel(Model):
         self.step_count   = 0
 
         # create & place players
-        for i in range(n_players):
-            a = AuctionPlayer(self, update_mode="uniform", update_parms={"max_stepsize": 1})
-            
-            # Find empty cell and place agent
-            x = self.rng.integers(0, gridDim[0])
-            y = self.rng.integers(0, gridDim[1])
-            
-            # Try to find an empty cell (since capacity=1 conceptually)
-            attempts = 0
-            while len(self.grid.get_cell_list_contents([(x, y)])) > 0 and attempts < 100:
-                x = self.rng.integers(0, gridDim[0])
-                y = self.rng.integers(0, gridDim[1])
-                attempts += 1
-            
-            # Place agent on grid - agents are automatically added to self.agents
-            self.grid.place_agent(a, (x, y))
+        for x in range(gridDim[0]):
+            for y in range(gridDim[1]):
+                a = agentType(self, update_mode="uniform", update_parms={"max_stepsize": 1})
+
+                # Place agent on grid - agents are automatically added to self.agents
+                self.grid.place_agent(a, (x, y))
 
         print(f"Created {len(self.agents)} agents on {gridDim[0]}x{gridDim[1]} grid")
 
     def step(self):
         """
-        One step of the model: All agents play together in the same tournament.
-        This is equivalent to calling game.round() with all agents.
+        One step of the model: Agents will find their neighbors and play a match of poker against them
         """
         self.step_count += 1
-        
-        if len(self.agents) < 2:
-            print("Not enough agents for a tournament")
-            return
         
         # Reset all agent balances before the step
         for agent in self.agents:
             agent.balances[:] = 0
-        
-        # Setup the game with ALL agents
-        all_agents = list(self.agents)
-        self.game.setup(all_agents)
-        
-        for game_num in range(self.games_per_step):
-            for round_num in range(self.n_rounds):
-                self.game.round()
-                self.profit_grids.append(self._get_profit_grid())
-                ## mutate agents' strategies after each round
-                for agent in all_agents:
-                    if agent.update_mode == "uniform":
-                        agent._upd_uniform(**agent.update_parms)
-        
-        # After all rounds, determine who lost (minimum total balance)
-        yields = [agent.balances.sum() for agent in all_agents]
-        if yields:
-            min_yield = min(yields)
-            total_pot = sum(yields)
-            self.datacollect.append(total_pot)
-            
+        self.agents.do("challenge")
 
+        # After all rounds, determine who lost (minimum total balance)
+        yields = [agent.balances.sum() for agent in self.agents]
+            
         # Call gameEnd for all agents, marking losers
-        for agent, yield_val in zip(all_agents, yields):
-            is_loser = (yield_val == min_yield)
-            agent.gameEnd(is_loser)
+        self.agents.shuffle_do("neighborhood_adapt")
         
         # Record current profit state
+        self.profit_grids.append(self._get_profit_grid())
         print(f"Step {self.step_count}: Profit grid recorded.")
         
         if self.step_count % 10 == 0:
             print(f"Step {self.step_count}: Yields = {yields}")
-
-    def get_neighbors(self, agent):
-        """Get Von Neumann neighbors of an agent (for future spatial interactions)"""
-        neighbors = self.grid.get_neighbors(
-            agent.pos, 
-            moore=False,  # Von Neumann (not Moore)
-            include_center=False,
-            radius=1
-        )
-        return neighbors
 
     def _get_profit_grid(self):
         """

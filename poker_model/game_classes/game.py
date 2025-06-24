@@ -62,6 +62,13 @@ class Game:
             player.handResult(payOuts[i])
         
 
+    def playGame(self, rounds: int):
+        """
+        Play a single game, do not resolve game-end
+        """
+        for round in range(rounds):
+                self.round()
+
     def play(self, games: int, rounds: int, verbose = True):
         """
         Play an amount of games consisting of an amount of rounds. Players will adjust strategies between
@@ -82,6 +89,7 @@ class Game:
             if verbose: print(*yields)
 
         return data
+    
     
 
 
