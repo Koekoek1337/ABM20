@@ -139,7 +139,8 @@ class RiskFreeAgent(AuctionPlayer):
     """
     def __init__(self, model, update_mode="null", update_parms=None, *args, **kwargs):
         super().__init__(model, update_mode, update_parms, *args, **kwargs)
-
+        self.new_strat = self.strategy.copy()
+    
     def getBet(self, hand_name):
         idx = self.HAND_TO_INDEX[hand_name]
         self.hand_index = idx
@@ -157,12 +158,12 @@ class RiskFreeAgent(AuctionPlayer):
         lo = np.max(0, self.strategy[statIndex] - max_stepsize)
         hi = np.min(MAX_BET, self.strategy[statIndex] + max_stepsize)
         newVal = self.rng.uniform(lo, hi)
-        self.strategy[statIndex] = newVal
+        self.new_strat[statIndex] = newVal
  
     def _upd_normal(self, std = 10):
         statIndex = self.rng.choice(len(self.strategy))
         newVal = self.rng.normal(self.strategy[statIndex], std)
-        self.strategy[statIndex] = self._clampValue(newVal) 
+        self.new_strat[statIndex] = self._clampValue(newVal) 
 
     def _recombination(self, stratA, stratB):
         """
@@ -192,15 +193,18 @@ class RiskFreeAgent(AuctionPlayer):
 
         if recomb_method == "self" or len(candidates) == 1:
             i_partner =  self.rng.choice(len(candidates), p = prob_density)
-            self.strategy = self._recombination(self.strategy.copy(), candidates[i_partner].getStrat())
+            self.new_strat = self._recombination(self.strategy.copy(), candidates[i_partner].getStrat())
         elif recomb_method == "fittest":
             i_partners    =  self.rng.choice(len(candidates), 2, False, p = prob_density)
-            self.strategy = self._recombination(candidates[i_partners[0]].getStrat(), candidates[i_partner].getStrat())
+            self.new_strat = self._recombination(candidates[i_partners[0]].getStrat(), candidates[i_partner].getStrat())
 
         if mut_method   == "normal" : self._upd_normal (mut_mod)
         elif mut_method == "uniform": self._upd_uniform(mut_mod)
         
         return
+
+    def updateStrat(self):
+        self.strategy = self.new_strat.copy()
 
 class SingleRiskAgent(RiskFreeAgent):
     I_RISK = HANDS

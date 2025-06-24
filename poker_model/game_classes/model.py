@@ -49,7 +49,7 @@ class SpatialModel(Model):
             
         # Call gameEnd for all agents, marking losers
         self.agents.shuffle_do("neighborhood_adapt")
-        
+        self.agents.do("updateStrat")
         # Record current profit state
         self.profit_grids.append(self._get_profit_grid())
         print(f"Step {self.step_count}: Profit grid recorded.")
