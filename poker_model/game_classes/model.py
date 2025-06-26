@@ -8,7 +8,7 @@ from .game   import Game
 from typing import List
 
 class SpatialModel(Model):
-    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = EvoRiskAgent, ra_bounds = (0, 1)):
+    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = "evo", ra_bounds = (0, 1)):
         super().__init__(seed=seed)
         self.rng          = np.random.default_rng(seed)
         self.gridDim      = gridDim
@@ -23,11 +23,16 @@ class SpatialModel(Model):
         self.profit_grids = []               # snapshots of profit heatmaps
         self.step_count   = 0
 
+        if agentType == "evo":
+            agentType = EvoRiskAgent
+        elif agentType == "fixed":
+            agentType = fixedRiskAgent
+
         # create & place players
         risk_aversions = np.random.uniform(ra_bounds[0], ra_bounds[1], gridDim[0] * gridDim[1])
         for x in range(gridDim[0]):
             for y in range(gridDim[1]):
-                a = agentType(self, update_mode="uniform", update_parms={"max_stepsize": 1}, risk_aversion=risk_aversions[x * gridDim[1] + y])
+                a = agentType(self, update_mode="uniform", update_parms={"max_stepsize": 10}, risk_aversion=risk_aversions[x * gridDim[1] + y])
 
                 # Place agent on grid - agents are automatically added to self.agents
                 self.grid.place_agent(a, (x, y))
