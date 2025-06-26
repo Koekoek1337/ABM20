@@ -182,7 +182,7 @@ class AuctionPlayer(Agent):
         if value > MAX_BET: return MAX_BET  
 
 
-class RiskFreeAgent(AuctionPlayer):
+class fixedRiskAgent(AuctionPlayer):
     """
     Plays poker as an auction with a fixed hand of values.
     Only raises and does not call.
@@ -198,9 +198,14 @@ class RiskFreeAgent(AuctionPlayer):
         
         # Apply risk aversion to the base strategy value
         base_bet = self.strategy[idx]
-        adjusted_bet = self._risk_adjusted_raise(base_bet, strength)
+        adjusted_raise = self._risk_adjusted_raise(base_bet, strength)
+        if adjusted_raise > MAX_BET: adjusted_raise = MAX_BET
+
+        risk_multiplier = 1 + (1 - self.risk_aversion) # * (self.strategy[self.I_RISK] / MAX_BET)
+        adjusted_call = adjusted_raise * risk_multiplier
         
-        return adjusted_bet, adjusted_bet
+        return adjusted_raise, adjusted_call
+        # return adjusted_raise, adjusted_raise
     
     def _random_strat(self):
         return self.rng.uniform(0, MAX_BET, HANDS)
@@ -224,7 +229,7 @@ class RiskFreeAgent(AuctionPlayer):
         newVal = self.rng.normal(self.strategy[statIndex], adjusted_std)
         self.new_strat[statIndex] = self._clampValue(newVal) 
 
-    def _recombination(self, stratA, stratB):
+    def _foldRecombination(self, stratA, stratB):
         """
         Returns a recombined genotype for the agent.
         """
@@ -237,7 +242,16 @@ class RiskFreeAgent(AuctionPlayer):
 
         return parStart
     
-    def neighborhood_adapt(self, recomb_method="self", mut_method=None, mut_mod = 10):
+    def _randomRecombination(self, stratA: np.ndarray, stratB: np.ndarray):
+        newStrat = stratA.copy()
+        nB_genes = int(np.floor(len(self.strategy) / 2))
+        B_geneChoices  = self.rng.choice(len(self.strategy), nB_genes, False)
+        j = 0
+        for i in B_geneChoices:
+            newStrat[i] = stratB[i]
+        return newStrat
+
+    def neighborhood_adapt(self, recomb_target="self", recomb_method="rand", mut_method=None, mut_mod = 10):
         """ 
         Adapt strategy to moore neighborhood based on neighbor fitness
         """
@@ -245,17 +259,24 @@ class RiskFreeAgent(AuctionPlayer):
 
         candidates, scores = self._neighbor_selection()
 
-        if not candidates:
-            return
+        if not candidates: return
+        
+        p_notChange = (self.balances.sum() / np.max(scores))
+        if self.rng.random() < p_notChange: return
         
         prob_density = scores / scores.sum()
+        if recomb_target == "self" or len(candidates) == 1:
 
-        if recomb_method == "self" or len(candidates) == 1:
-            i_partner =  self.rng.choice(len(candidates), p = prob_density)
-            self.new_strat = self._recombination(self.strategy.copy(), candidates[i_partner].getStrat())
-        elif recomb_method == "fittest":
-            i_partners    =  self.rng.choice(len(candidates), 2, False, p = prob_density)
-            self.new_strat = self._recombination(candidates[i_partners[0]].getStrat(), candidates[i_partners[1]].getStrat())
+            i_partner      = self.rng.choice(len(candidates), p = prob_density)
+            partners       = [self.strategy.copy(), candidates[i_partner].getStrat()]
+        elif recomb_target == "fittest":
+            i_partners =  self.rng.choice(len(candidates), 2, False, p = prob_density)
+            partners   = [candidates[i_partners[0]].getStrat(), candidates[i_partners[1]].getStrat()]
+
+        if recomb_method == "rand":
+            self.new_strat = self._randomRecombination(*partners)            
+        if recomb_method == "fold":
+            self.new_strat = self._foldRecombination(*partners)
 
         if mut_method   == "normal" : self._upd_normal (mut_mod)
         elif mut_method == "uniform": self._upd_uniform(mut_mod)
@@ -265,26 +286,17 @@ class RiskFreeAgent(AuctionPlayer):
     def updateStrat(self):
         self.strategy = self.new_strat.copy()
 
-class SingleRiskAgent(RiskFreeAgent):
+class EvoRiskAgent(fixedRiskAgent):
     I_RISK = HANDS
     # Index of risk factor in agent "genotype"
 
     def __init__(self, model, update_mode="null", update_parms=None, risk_aversion=0.5, *args, **kwargs):
-        super().__init__(model, update_mode, update_parms, risk_aversion, *args, **kwargs)
+        super().__init__(model, risk_aversion, update_mode, update_parms, *args, **kwargs)
+        self.strategy[self.I_RISK] = MAX_BET * (1 - risk_aversion)
 
     def _random_strat(self):
         return self.rng.uniform(0, MAX_BET, HANDS + 1)
     
-    def getBet(self, hand_name):
-        idx = self.HAND_TO_INDEX[hand_name]
-        self.hand_index = idx
-        strength = self._hand_strength(hand_name)
-        
-        base_bet = self.strategy[idx]
-        adjusted_raise = self._risk_adjusted_raise(base_bet, strength)
-        
-        # Apply both the internal risk factor and risk_aversion
-        risk_multiplier = 1 + (self.strategy[self.I_RISK] / MAX_BET) * (1 - self.risk_aversion)
-        adjusted_call = adjusted_raise * risk_multiplier
-        
-        return adjusted_raise, adjusted_call
+    def updateStrat(self):
+        super().updateStrat()
+        self.risk_aversion = 1 - self.strategy[self.I_RISK] / MAX_BET

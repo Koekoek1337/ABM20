@@ -1,4 +1,5 @@
 from game_classes.model import SpatialModel
+from game_classes.agents import fixedRiskAgent, EvoRiskAgent
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
@@ -124,10 +125,10 @@ def run_multiple_simulations():
     ]
     
     # Simulation parameters
-    GAMES = 25
+    GAMES = 10
     GRID_SIZE = (8, 8)  # Smaller grid for faster execution
     N_ROUNDS = 800
-    N_REPLICATIONS = 3  # Run each scenario multiple times
+    N_REPLICATIONS = 1  # Run each scenario multiple times
     
     all_results = []
     final_results = []
@@ -221,6 +222,7 @@ def create_comprehensive_analysis(scenarios, evolution_df, final_agents_df):
     ax1.grid(True, alpha=0.3)
     
     # 2. Evolution of Total Wealth
+    """
     ax2 = plt.subplot(3, 4, 2)
     for scenario in scenarios:
         scenario_data = evolution_df[evolution_df['scenario'] == scenario['name']]
@@ -240,6 +242,7 @@ def create_comprehensive_analysis(scenarios, evolution_df, final_agents_df):
     ax2.set_ylabel('Total Wealth')
     ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     ax2.grid(True, alpha=0.3)
+    """
     
     # 3. Wealth Inequality (Gini Coefficient)
     ax3 = plt.subplot(3, 4, 3)
