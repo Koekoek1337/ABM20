@@ -160,7 +160,7 @@ class AuctionPlayer(Agent):
         """
         fitness = self.balances.sum()
         # assert isinstance(self.model.grid, MultiGrid)
-        neighbors = self.model.grid.get_neighbors(self.pos, True, False)
+        neighbors = self.model.grid.get_neighbors(self.pos, False, False)
         neigh_fitnesses = [neighbor.balances.sum() for neighbor in neighbors]
         
         # indexes of neighbors with greater score(fitness) than self
