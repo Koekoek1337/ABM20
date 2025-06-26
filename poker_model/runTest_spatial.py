@@ -4,8 +4,9 @@ import matplotlib.animation as animation
 import numpy as np
 
 if __name__ == "__main__":
-    M = SpatialModel( gridDim=(10, 10), n_rounds=1000, seed=42, ra_bounds=(0, 1))
-    GAMES = 20  # Run more games to see evolution
+    saveFig = True
+    M = SpatialModel( gridDim=(8, 8), n_rounds=1000, seed=42, ra_bounds=(0, 1), agentType="fixed")
+    GAMES = 50  # Run more games to see evolution
     
     for game in range(GAMES):
         print(f"Running games {game+1}/{GAMES}")
@@ -121,4 +122,4 @@ if __name__ == "__main__":
     plt.show()
     
     # Optional: Save the animation
-    # ani.save('poker_evolution.gif', writer='pillow', fps=1)
+    if saveFig: ani.save('poker_evolution.gif', writer='pillow', fps=1)
