@@ -15,16 +15,31 @@
               "state": {
                 "file": "Model Layout.canvas",
                 "viewState": {
-                  "x": -603.5452227468736,
-                  "y": -233.46530322597275,
+                  "x": -92.25258449616081,
+                  "y": -621.9671897708057,
                   "zoom": -1.0093207568082698
                 }
               },
               "icon": "lucide-layout-dashboard",
               "title": "Model Layout"
             }
+          },
+          {
+            "id": "d13faa64ccf53024",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "TODO.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "TODO"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -171,10 +186,11 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "340cda3ced6c9612",
+  "active": "d13faa64ccf53024",
   "lastOpenFiles": [
-    "Poker game Layout.canvas",
     "Model Layout.canvas",
+    "TODO.md",
+    "Poker game Layout.canvas",
     "2. Poker Game.md",
     "1. Model.md",
     "3. Strategies.md",
