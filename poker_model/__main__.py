@@ -7,6 +7,85 @@ import pandas as pd
 from collections import defaultdict
 import seaborn as sns
 
+def run_multiple_simulations():
+    """Run multiple simulations with different risk aversion bounds"""
+    
+    # Define different risk aversion scenarios
+    scenarios = [
+        {'name': 'Risk Seeking', 'bounds': (0.0, 0.3), 'color': 'red'},
+        {'name': 'Mixed Low', 'bounds': (0.0, 0.5), 'color': 'orange'},  
+        {'name': 'Balanced', 'bounds': (0.2, 0.8), 'color': 'green'},
+        {'name': 'Mixed High', 'bounds': (0.5, 1.0), 'color': 'blue'},
+        {'name': 'Risk Averse', 'bounds': (0.7, 1.0), 'color': 'purple'},
+        {'name': 'Full Range', 'bounds': (0.0, 1.0), 'color': 'black'}
+    ]
+    
+    # Simulation parameters
+    GAMES = 25
+    GRID_SIZE = (8, 8)  # Smaller grid for faster execution
+    N_ROUNDS = 800
+    N_REPLICATIONS = 3  # Run each scenario multiple times
+    
+    all_results = []
+    final_results = []
+    
+    for scenario in scenarios:
+        print(f"\n{'='*50}")
+        print(f"SCENARIO: {scenario['name']} (RA: {scenario['bounds']})")
+        print(f"{'='*50}")
+        
+        scenario_results = []
+        
+        for rep in range(N_REPLICATIONS):
+            print(f"\nReplication {rep+1}/{N_REPLICATIONS}")
+            
+            # Use different seeds for each replication
+            seed = 42 + rep * 100
+            
+            model, evolution_data = run_single_simulation(
+                ra_bounds=scenario['bounds'],
+                gridDim=GRID_SIZE,
+                n_rounds=N_ROUNDS,
+                games=GAMES,
+                seed=seed
+            )
+            
+            # Add scenario info to evolution data
+            for key in evolution_data:
+                if isinstance(evolution_data[key], list):
+                    evolution_data[key] = np.array(evolution_data[key])
+            
+            evolution_df = pd.DataFrame(evolution_data)
+            evolution_df['scenario'] = scenario['name']
+            evolution_df['replication'] = rep
+            evolution_df['ra_bounds'] = str(scenario['bounds'])
+            
+            all_results.append(evolution_df)
+            scenario_results.append(evolution_df)
+            
+            # Store final state data
+            final_agents = []
+            for agent in model.agents:
+                if hasattr(agent, 'pos') and agent.pos is not None:
+                    x, y = agent.pos
+                    wealth = model.profit_grids[-1][x, y] if model.profit_grids else 0
+                    final_agents.append({
+                        'scenario': scenario['name'],
+                        'replication': rep,
+                        'risk_aversion': agent.risk_aversion,
+                        'wealth': wealth,
+                        'ra_bounds': str(scenario['bounds'])
+                    })
+            
+            final_results.extend(final_agents)
+    
+    # Combine all results
+    combined_evolution = pd.concat(all_results, ignore_index=True)
+    final_agents_df = pd.DataFrame(final_results)
+    
+    return scenarios, combined_evolution, final_agents_df
+
+
 def run_single_simulation(ra_bounds, gridDim=(10, 10), n_rounds=1000, games=20, seed=None):
     """Run a single simulation with given risk aversion bounds"""
     print(f"Running simulation with RA bounds: {ra_bounds}")
@@ -110,84 +189,6 @@ def calculate_gini(wealth_array):
     # Calculate Gini coefficient
     gini = (2 * np.sum((np.arange(1, n+1) * sorted_wealth))) / (n * np.sum(sorted_wealth)) - (n + 1) / n
     return max(0, gini)  # Ensure non-negative
-
-def run_multiple_simulations():
-    """Run multiple simulations with different risk aversion bounds"""
-    
-    # Define different risk aversion scenarios
-    scenarios = [
-        {'name': 'Risk Seeking', 'bounds': (0.0, 0.3), 'color': 'red'},
-        {'name': 'Mixed Low', 'bounds': (0.0, 0.5), 'color': 'orange'},  
-        {'name': 'Balanced', 'bounds': (0.2, 0.8), 'color': 'green'},
-        {'name': 'Mixed High', 'bounds': (0.5, 1.0), 'color': 'blue'},
-        {'name': 'Risk Averse', 'bounds': (0.7, 1.0), 'color': 'purple'},
-        {'name': 'Full Range', 'bounds': (0.0, 1.0), 'color': 'black'}
-    ]
-    
-    # Simulation parameters
-    GAMES = 10
-    GRID_SIZE = (8, 8)  # Smaller grid for faster execution
-    N_ROUNDS = 800
-    N_REPLICATIONS = 1  # Run each scenario multiple times
-    
-    all_results = []
-    final_results = []
-    
-    for scenario in scenarios:
-        print(f"\n{'='*50}")
-        print(f"SCENARIO: {scenario['name']} (RA: {scenario['bounds']})")
-        print(f"{'='*50}")
-        
-        scenario_results = []
-        
-        for rep in range(N_REPLICATIONS):
-            print(f"\nReplication {rep+1}/{N_REPLICATIONS}")
-            
-            # Use different seeds for each replication
-            seed = 42 + rep * 100
-            
-            model, evolution_data = run_single_simulation(
-                ra_bounds=scenario['bounds'],
-                gridDim=GRID_SIZE,
-                n_rounds=N_ROUNDS,
-                games=GAMES,
-                seed=seed
-            )
-            
-            # Add scenario info to evolution data
-            for key in evolution_data:
-                if isinstance(evolution_data[key], list):
-                    evolution_data[key] = np.array(evolution_data[key])
-            
-            evolution_df = pd.DataFrame(evolution_data)
-            evolution_df['scenario'] = scenario['name']
-            evolution_df['replication'] = rep
-            evolution_df['ra_bounds'] = str(scenario['bounds'])
-            
-            all_results.append(evolution_df)
-            scenario_results.append(evolution_df)
-            
-            # Store final state data
-            final_agents = []
-            for agent in model.agents:
-                if hasattr(agent, 'pos') and agent.pos is not None:
-                    x, y = agent.pos
-                    wealth = model.profit_grids[-1][x, y] if model.profit_grids else 0
-                    final_agents.append({
-                        'scenario': scenario['name'],
-                        'replication': rep,
-                        'risk_aversion': agent.risk_aversion,
-                        'wealth': wealth,
-                        'ra_bounds': str(scenario['bounds'])
-                    })
-            
-            final_results.extend(final_agents)
-    
-    # Combine all results
-    combined_evolution = pd.concat(all_results, ignore_index=True)
-    final_agents_df = pd.DataFrame(final_results)
-    
-    return scenarios, combined_evolution, final_agents_df
 
 def create_comprehensive_analysis(scenarios, evolution_df, final_agents_df):
     """Create comprehensive analysis plots"""
