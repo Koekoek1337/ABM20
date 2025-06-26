@@ -8,7 +8,7 @@ from .game   import Game
 from typing import List
 
 class SpatialModel(Model):
-    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = fixedRiskAgent, ra_bounds = (0, 1)):
+    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = EvoRiskAgent, ra_bounds = (0, 1)):
         super().__init__(seed=seed)
         self.rng          = np.random.default_rng(seed)
         self.gridDim      = gridDim
