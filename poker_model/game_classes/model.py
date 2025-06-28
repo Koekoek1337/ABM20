@@ -1,14 +1,15 @@
 import numpy as np
 from mesa import Model
 from mesa.space import MultiGrid
-from .agents import AuctionPlayer, fixedRiskAgent, EvoRiskAgent
+from .agents import fixedRiskAgent, EvoRiskAgent
 from .game   import Game
 
 
 from typing import List
 
 class SpatialModel(Model):
-    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = "evo", ra_bounds = (0, 1)):
+    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = "evo", ra_bounds = (0, 1),
+                    nRecombine=5, weightRecombine = 0.5, mut_std= 10, nMut=1):
         super().__init__(seed=seed)
         self.rng          = np.random.default_rng(seed)
         self.gridDim      = gridDim
@@ -23,6 +24,11 @@ class SpatialModel(Model):
         self.profit_grids = []               # snapshots of profit heatmaps
         self.step_count   = 0
 
+        self.recombinedGenes = nRecombine
+        self.weightRecombine = weightRecombine
+        self.mutatedGenes    = nMut
+        self.mutation_std    = mut_std
+    
         if agentType == "evo":
             agentType = EvoRiskAgent
         elif agentType == "fixed":
@@ -32,7 +38,7 @@ class SpatialModel(Model):
         risk_aversions = np.random.uniform(ra_bounds[0], ra_bounds[1], gridDim[0] * gridDim[1])
         for x in range(gridDim[0]):
             for y in range(gridDim[1]):
-                a = agentType(self, update_mode="uniform", update_parms={"max_stepsize": 10}, risk_aversion=risk_aversions[x * gridDim[1] + y])
+                a = agentType(self, update_mode="uniform", risk_aversion=risk_aversions[x * gridDim[1] + y])
 
                 # Place agent on grid - agents are automatically added to self.agents
                 self.grid.place_agent(a, (x, y))
@@ -44,7 +50,6 @@ class SpatialModel(Model):
         One step of the model: Agents will find their neighbors and play a match of poker against them
         """
         self.step_count += 1
-        
         # Reset all agent balances before the step
         for agent in self.agents:
             agent.balances[:] = 0
@@ -54,7 +59,10 @@ class SpatialModel(Model):
         yields = [agent.balances.sum() for agent in self.agents]
             
         # Call gameEnd for all agents, marking losers
-        self.agents.shuffle_do("neighborhood_adapt")
+        for agent in self.agents:
+            agent.neighborhood_adapt(recomb_target="self", recomb_method="random", nRec=self.recombinedGenes, 
+                                     wRec=self.weightRecombine, mut_method="normal", mut_mod = self.mutatedGenes , 
+                                     nMut=self.mutation_std)
         self.agents.do("updateStrat")
         # Record current profit state
         self.profit_grids.append(self._get_profit_grid())
@@ -105,5 +113,5 @@ class IterativeCompetition(Model):
                  seed = None, rng = None, **kwargs):
         super().__init__(*args, seed=seed, rng=rng, **kwargs)
 
-        AuctionPlayer.create_agents(self, nPlayers, update_mode=agentUpdateMode, updateParms=updateParms)
+        fixedRiskAgent.create_agents(self, nPlayers, update_mode=agentUpdateMode, updateParms=updateParms)
         self.game = Game([player for player in self.agents], self.rng)
