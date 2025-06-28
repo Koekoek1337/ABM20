@@ -5,19 +5,19 @@ from operator import itemgetter
 import PokerPy
 
 from .deck import Deck
-from .agents import AuctionPlayer, RAISELIM, CALL_LIM
+from .agents import fixedRiskAgent, RAISELIM, CALL_LIM
 
 from typing import List, Tuple
 
 # type Card = PokerPy.Card
 
 class Game:
-    def __init__(self, players: List[AuctionPlayer], rng:np.random.Generator):
+    def __init__(self, players: List[fixedRiskAgent], rng:np.random.Generator):
         self.RNG=rng
         self.deck = Deck()
         self.setup(players)        
 
-    def setup(self, players: List[AuctionPlayer]):
+    def setup(self, players: List[fixedRiskAgent]):
         self.players = players
         self._nPlayers = len(players)
         self.deck.shuffle(self.RNG)
