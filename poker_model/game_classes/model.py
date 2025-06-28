@@ -60,8 +60,12 @@ class SpatialModel(Model):
             
         # Call gameEnd for all agents, marking losers
         for agent in self.agents:
-            agent.neighborhood_adapt(recomb_target="self", recomb_method="random", nRec=self.recombinedGenes, 
-                                     wRec=self.weightRecombine, mut_method="normal", mut_mod = self.mutatedGenes , 
+            agent.neighborhood_adapt(recomb_target="self", 
+                                     recomb_method="random",
+                                     nRec=self.recombinedGenes, 
+                                     wRec=self.weightRecombine,
+                                     mut_method="normal", 
+                                     mut_mod = self.mutatedGenes , 
                                      nMut=self.mutation_std)
         self.agents.do("updateStrat")
         # Record current profit state
