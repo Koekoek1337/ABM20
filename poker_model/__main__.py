@@ -5,8 +5,7 @@ import pathlib
 from simulation.running import run_multiple_simulations
 from simulation.analysis import create_comprehensive_analysis
 
-# TODO: Parameter commandline argument
-# TODO: Add new model parameters
+# TODO: Add new model parameters to run_multiple
 def main(jobfilepath):
     print("Starting comprehensive poker simulation analysis...")
     print("This will run multiple scenarios with different risk aversion bounds.")
