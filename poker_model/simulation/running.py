@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import json
 
 from game_classes.model import SpatialModel
 from game_classes.agents import fixedRiskAgent, EvoRiskAgent
@@ -8,16 +7,10 @@ from simulation.analysis import analyze_step
 
 from typing import List, Dict, Tuple, Any
 
-SEED_GENERATOR = np.random.default_rng(42)
-
-def loadParameters(filepath:str) -> List[Dict[str, Any]]:
-    with open(filepath) as jsonFile:
-        return json.load(jsonFile)
-
-
-def run_multiple_simulations(scenarios: List[Dict[str, Any]], gridSize=(8,8), games=25, rounds=800, replications=3, jobtype=None):
+def run_multiple_simulations(scenarios: List[Dict[str, Any]], gridSize=(8,8), games=25, rounds=800, replications=3, seed=42, jobtype=None):
     """Run multiple simulations with different risk aversion bounds"""
-    
+    SEED_GENERATOR = np.random.default_rng(seed)
+
     all_results = []
     final_results = []
     
