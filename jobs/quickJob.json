@@ -1,0 +1,17 @@
+{
+    "gridSize":[3,3],
+    "games": 10,
+    "rounds": 500,
+    "replications":3,
+    "jobType": "batchrun",
+    "scenarios": [
+        {"name": "Test",   
+         "bounds": [0.0, 1.0], 
+         "nRecombine":5, 
+         "weightRecombine":0.5, 
+         "mut_std": 10, 
+         "nMut":1,
+         "color": "red"
+        }
+    ]
+}
