@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 
 from game_classes.model import SpatialModel
 
-from typing import List, Any
+from typing import List, Dict, Any
 
 DEFAULT_FILELOCATION = "./out_animation.gif"
 
@@ -42,17 +42,17 @@ class PokerAnimator:
 
         self.initGrid()
 
-    def update_plot(self, frame_idx) -> List[Any]:
+    def update_plot(self, frame_idx:int) -> List[Any]:
         """
         Animation plot updater for matplotlib FuncAnimation. 
-         
+        
         Returns: the list of changed elements blitting support.
         """
         if frame_idx >= len(self.M.profit_grids):
             frame_idx = len(self.M.profit_grids) - 1
             
         self.updateGrid(frame_idx)
-        im = self.updateHeatmap()
+        im = self.updateHeatmap(frame_idx)
 
         agents_info = self.agentInfo(frame_idx)
         self.updateCellAnnotations(frame_idx, agents_info)
@@ -61,16 +61,12 @@ class PokerAnimator:
 
         return [im, title] + self.cell_annotations
     
-    def updateGrid(self, frame_idx):
-        """
-        Update internal profit grid for convenience
-        """
+    def updateGrid(self, frame_idx:int):
+        """Update internal profit grid for convenience"""
         self.grid = self.M.profit_grids[frame_idx]
     
-    def updateHeatmap(self):
-        """
-        Create the plot heatmap if it does not exists, else update it
-        """
+    def updateHeatmap(self, frame_idx:int):
+        """Create the plot heatmap if it does not exists, else update it"""
         if self.im is None:
             # Create the heatmap
             self.im = self.ax.imshow(self.grid, cmap='RdYlBu_r', interpolation='nearest', 
@@ -86,10 +82,8 @@ class PokerAnimator:
         
         return self.im
 
-    def agentInfo(self, frame_idx):
-        """
-        Get agent positions and strategies at this frame
-        """
+    def agentInfo(self, frame_idx:int) -> Dict[Any]:
+        """Get agent positions and strategies at this frame"""
         agents_info = {}
         for agent in self.M.agents:
             if hasattr(agent, 'pos') and agent.pos is not None:
@@ -102,7 +96,7 @@ class PokerAnimator:
                 }
         return agents_info
     
-    def updateCellAnnotations(self, frame_idx, agents_info):
+    def updateCellAnnotations(self, frame_idx:int, agents_info:Dict[str, Any]):
         """
         Add text annotations for each cell
         TODO: See if more relevant data can be displayed per iteration
@@ -134,15 +128,14 @@ class PokerAnimator:
                     if firstRun: 
                         self.cell_annotations.append(self.ax.text(y, x, text, ha='center', va='center', 
                                                                   fontsize=8, color=text_color, weight='bold')) 
-                    else: 
-                        self.cell_annotations[textIndex].set_text(text)
+                    self.cell_annotations[textIndex].set_text(text)
                 else:
                     # Empty cell
                     if firstRun:
                         self.cell_annotations.append(self.ax.text(y, x, f"${profit_val:.0f}\nEmpty", 
                                                                   ha='center', va='center', fontsize=8, color='gray'))
 
-    def updateTitle(self, frame_idx):
+    def updateTitle(self, frame_idx:int) -> plt.Text:
         """Update title with relevant frame number."""
         title = self.ax.set_title(f"Step {frame_idx + 1} - Agent Strategies & Profits\n"
                           f"R=Raise Limit, C=Call Limit, Bl=Bluff %, Bs=Bluff Size", 
@@ -151,9 +144,7 @@ class PokerAnimator:
         return title
     
     def initGrid(self):
-        """
-        Initializes gridlines and labels.
-        """
+        """Initializes gridlines and labels."""
         # Add ticks and labels
         self.ax.set_xlabel("Y Coordinate")
         self.ax.set_ylabel("X Coordinate")
@@ -165,9 +156,7 @@ class PokerAnimator:
         self.ax.grid(which='minor', color='black', linestyle='-', linewidth=2)
     
     def makeAnimation(self) -> animation.FuncAnimation:
-        """
-        FuncAnimation convenience function.
-        """
+        """FuncAnimation convenience function."""
         ani = animation.FuncAnimation(self.fig, self.update_plot, frames=len(self.M.profit_grids), 
                                  interval=20, repeat=True, blit=True)
         plt.tight_layout()
