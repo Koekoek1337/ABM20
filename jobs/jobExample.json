@@ -3,7 +3,8 @@
     "games": 50,
     "rounds": 500,
     "replications":3,
-    "jobType": "batchrun",
+    "jobtype": "batchrun",
+    "seed": 42,
     "scenarios": [
         {"name": "Risk Seeking",
          "bounds": [0.0, 0.3], 
