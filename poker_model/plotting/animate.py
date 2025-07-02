@@ -4,9 +4,19 @@ import matplotlib.animation as animation
 
 from game_classes.model import SpatialModel
 
+from typing import List, Any
+
 DEFAULT_FILELOCATION = "./out_animation.gif"
 
 def createAnimation(Model: SpatialModel, showAnimation = False, savePath=DEFAULT_FILELOCATION):
+    """
+    Creates an animation of agent wealth per iteration for the spatial poker model.
+
+    Args:
+        Model: Model object containing runtime information
+        showAnimation: if True, will show the animation in a matplotlib window.
+        savePath: Full filepath for the output gif. If none is given, no file will be saved instead.
+    """
     animator = PokerAnimator(Model)
     ani = animator.makeAnimation()
     
@@ -18,6 +28,10 @@ def createAnimation(Model: SpatialModel, showAnimation = False, savePath=DEFAULT
     ani.save(savePath, writer='pillow', fps=1)
 
 class PokerAnimator:
+    """
+    Animatior class for the `createAnimation` function. Not intended for standalone use. Used as a container
+    for animation data inbetween frames, allowing for easier abstraction.
+    """
     def __init__(self, M: SpatialModel):
         self.fig, self.ax = plt.subplots()
         self.M = M
@@ -28,32 +42,12 @@ class PokerAnimator:
 
         self.initGrid()
 
-    def initGrid(self):
+    def update_plot(self, frame_idx) -> List[Any]:
         """
-        Initializes gridlines and labels.
+        Animation plot updater for matplotlib FuncAnimation. 
+         
+        Returns: the list of changed elements blitting support.
         """
-        # Add ticks and labels
-        self.ax.set_xlabel("Y Coordinate")
-        self.ax.set_ylabel("X Coordinate")
-        self.ax.set_xticks(range(self.M.gridDim[1]))
-        self.ax.set_yticks(range(self.M.gridDim[0]))
-        # Add grid lines
-        self.ax.set_xticks(np.arange(-0.5, self.M.gridDim[1], 1), minor=True)
-        self.ax.set_yticks(np.arange(-0.5, self.M.gridDim[0], 1), minor=True)
-        self.ax.grid(which='minor', color='black', linestyle='-', linewidth=2)
-
-    def updateGrid(self, frame_idx):
-        """
-        Update internal profit grid for convenience
-        """
-        self.grid = self.M.profit_grids[frame_idx]
-    
-    def update_plot(self, frame_idx):
-        """
-        Animation plot updater.
-        """
-        #self.ax.clear()
-        
         if frame_idx >= len(self.M.profit_grids):
             frame_idx = len(self.M.profit_grids) - 1
             
@@ -66,6 +60,12 @@ class PokerAnimator:
         title = self.updateTitle(frame_idx)
 
         return [im, title] + self.cell_annotations
+    
+    def updateGrid(self, frame_idx):
+        """
+        Update internal profit grid for convenience
+        """
+        self.grid = self.M.profit_grids[frame_idx]
     
     def updateHeatmap(self):
         """
@@ -87,7 +87,9 @@ class PokerAnimator:
         return self.im
 
     def agentInfo(self, frame_idx):
-        # Get agent positions and strategies at this frame
+        """
+        Get agent positions and strategies at this frame
+        """
         agents_info = {}
         for agent in self.M.agents:
             if hasattr(agent, 'pos') and agent.pos is not None:
@@ -103,7 +105,7 @@ class PokerAnimator:
     def updateCellAnnotations(self, frame_idx, agents_info):
         """
         Add text annotations for each cell
-        TODO: See if datapoints can be made relevant per cell.
+        TODO: See if more relevant data can be displayed per iteration
         """
         firstRun = False
 
@@ -148,7 +150,24 @@ class PokerAnimator:
 
         return title
     
+    def initGrid(self):
+        """
+        Initializes gridlines and labels.
+        """
+        # Add ticks and labels
+        self.ax.set_xlabel("Y Coordinate")
+        self.ax.set_ylabel("X Coordinate")
+        self.ax.set_xticks(range(self.M.gridDim[1]))
+        self.ax.set_yticks(range(self.M.gridDim[0]))
+        # Add grid lines
+        self.ax.set_xticks(np.arange(-0.5, self.M.gridDim[1], 1), minor=True)
+        self.ax.set_yticks(np.arange(-0.5, self.M.gridDim[0], 1), minor=True)
+        self.ax.grid(which='minor', color='black', linestyle='-', linewidth=2)
+    
     def makeAnimation(self) -> animation.FuncAnimation:
+        """
+        FuncAnimation convenience function.
+        """
         ani = animation.FuncAnimation(self.fig, self.update_plot, frames=len(self.M.profit_grids), 
                                  interval=20, repeat=True, blit=True)
         plt.tight_layout()
