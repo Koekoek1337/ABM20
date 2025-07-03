@@ -6,7 +6,7 @@
     "sharedParameters":{
         "gridDim":[8,8],
         "games": 50,
-        "rounds": 500
+        "n_rounds": 500
         },
     "scenarios": [
         {"name": "Risk Seeking",
