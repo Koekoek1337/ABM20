@@ -1,13 +1,15 @@
 import numpy as np
 import pandas as pd
 
+from copy import copy
+
 from game_classes.model import SpatialModel
 from game_classes.agents import fixedRiskAgent, EvoRiskAgent
 from simulation.analysis import analyze_step
 
 from typing import List, Dict, Tuple, Any
 
-def run_multiple_simulations(scenarios: List[Dict[str, Any]], gridSize=(8,8), games=25, rounds=800, replications=3, seed=42, jobtype=None):
+def run_multiple_simulations(scenarios: List[Dict[str, Any]], sharedParameters: Dict[str,Any], replications=3, seed=42):
     """Run multiple simulations with different risk aversion bounds"""
     SEED_GENERATOR = np.random.default_rng(seed)
 
@@ -15,11 +17,14 @@ def run_multiple_simulations(scenarios: List[Dict[str, Any]], gridSize=(8,8), ga
     final_results = []
     
     for scenario in scenarios:
+        scenario["parameters"] = scenario["parameters"] | sharedParameters
         print(f"\n{'='*50}")
-        print(f"SCENARIO: {scenario['name']} (RA: {scenario['bounds']})")
+        print(f"SCENARIO: {scenario['name']} (RA: {scenario["parameters"]['ra_bounds']})")
         print(f"{'='*50}")
         
         scenario_results = []
+
+        
         
         for rep in range(replications):
             print(f"\nReplication {rep+1}/{replications}")
@@ -28,11 +33,7 @@ def run_multiple_simulations(scenarios: List[Dict[str, Any]], gridSize=(8,8), ga
             seed = SEED_GENERATOR.choice(2**32)
             
             model, evolution_data = run_single_simulation(
-                ra_bounds=scenario['bounds'],
-                gridDim=gridSize,
-                n_rounds=rounds,
-                games=games,
-                seed=seed
+                scenario["parameters"] 
             )
             
             evolution_df = extractEvoData(scenario,evolution_data, rep)
@@ -48,11 +49,15 @@ def run_multiple_simulations(scenarios: List[Dict[str, Any]], gridSize=(8,8), ga
     
     return combined_evolution, final_agents_df
 
-def run_single_simulation(ra_bounds, gridDim=(10, 10), n_rounds=1000, games=20, seed=None):
+def run_single_simulation(modelParameters: Dict[str, Any]):
     """Run a single simulation with given risk aversion bounds"""
+    ra_bounds = modelParameters["ra_bounds"]
     print(f"Running simulation with RA bounds: {ra_bounds}")
+    games = modelParameters["games"]
+    modelParameters = copy(modelParameters)
+    modelParameters.pop("games")
     
-    M = SpatialModel(gridDim=gridDim, n_rounds=n_rounds, seed=seed, ra_bounds=ra_bounds)
+    M = SpatialModel(**modelParameters)
     
     # Track evolution metrics
     evolution_data = {
@@ -86,7 +91,7 @@ def extractEvoData(scenario:Dict[str,Any], evolution_data, rep:int) -> pd.DataFr
     evolution_df = pd.DataFrame(evolution_data)
     evolution_df['scenario'] = scenario['name']
     evolution_df['replication'] = rep
-    evolution_df['ra_bounds'] = str(scenario['bounds'])
+    evolution_df['ra_bounds'] = str(scenario["parameters"]["ra_bounds"])
 
     return evolution_df
 
@@ -102,6 +107,6 @@ def extractAgentFinState(scenario:Dict[str,Any], model:SpatialModel, rep:int) ->
                 'replication': rep,
                 'risk_aversion': agent.risk_aversion,
                 'wealth': wealth,
-                'ra_bounds': str(scenario['bounds'])
+                'ra_bounds': str(scenario["parameters"]["ra_bounds"])
             })
     return final_agents

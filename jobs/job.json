@@ -1,53 +1,75 @@
-{
-    "gridSize":[8,8],
-    "games": 50,
-    "rounds": 500,
-    "replications":3,
+{ 
+    "jobName": "job",
     "jobtype": "batchrun",
+    "replications":3,
+    "seed": 42,
+    "sharedParameters":{
+        "gridDim":[8,8],
+        "games": 50,
+        "rounds": 500
+        },
     "scenarios": [
         {"name": "Risk Seeking",
-         "bounds": [0.0, 0.3], 
-         "nRecombine":5, 
-         "weightRecombine":0.5, 
-         "mut_std": 10, 
-         "nMut":1,
-         "color": "red"
+         "color": "red",
+         "parameters":{
+            "ra_bounds": [0.0, 0.3], 
+            "nRecombine":5, 
+            "weightRecombine":0.5, 
+            "mut_std": 10, 
+            "nMut":1
+            }
         },
         {"name": "Mixed Low",
-         "bounds": [0.0, 0.5],
-         "nRecombine":5, 
-         "weightRecombine":0.5, 
-         "mut_std": 10, 
-         "nMut":1,
-         "color" : "orange"},
-        {"name": "Balanced",     
-         "bounds": [0.2, 0.8], 
-         "nRecombine":5, 
-         "weightRecombine":0.5, 
-         "mut_std": 10, 
-         "nMut":1,
-         "color": "green"},
+         "color" : "orange",
+         "parameters":{
+            "ra_bounds": [0.0, 0.5],
+            "nRecombine":5, 
+            "weightRecombine":0.5, 
+            "mut_std": 10, 
+            "nMut":1
+            }
+        },
+        {"name": "Balanced",
+         "color": "green",
+         "parameters":{
+            "ra_bounds": [0.2, 0.8], 
+            "nRecombine":5, 
+            "weightRecombine":0.5, 
+            "mut_std": 10, 
+            "nMut":1
+            }         
+        },
+
         {"name": "Mixed High",   
-         "bounds": [0.5, 1.0], 
-         "nRecombine":5, 
-         "weightRecombine":0.5, 
-         "mut_std": 10, 
-         "nMut":1,
-         "color": "blue"},
+         "color": "blue",
+         "parameters":{
+            "ra_bounds": [0.5, 1.0], 
+            "nRecombine":5, 
+            "weightRecombine":0.5, 
+            "mut_std": 10, 
+            "nMut":1
+            }
+        },
         {"name": "Risk Averse",  
-         "bounds": [0.7, 1.0], 
-         "nRecombine":5, 
-         "weightRecombine":0.5, 
-         "mut_std": 10, 
-         "nMut":1,
-         "color": "purple"},
-        {"name": "Full Range",   
-         "bounds": [0.0, 1.0], 
-         "nRecombine":5, 
-         "weightRecombine":0.5, 
-         "mut_std": 10, 
-         "nMut":1,
-         "color": "black"
+         "color": "purple",
+         "parameters":{
+            "ra_bounds": [0.7, 1.0], 
+            "nRecombine":5, 
+            "weightRecombine":0.5, 
+            "mut_std": 10, 
+            "nMut":1
+            }
+        },
+
+        {"name": "Full Range",
+         "color": "black",
+         "parameters":{
+            "ra_bounds": [0.0, 1.0], 
+            "nRecombine":5, 
+            "weightRecombine":0.5, 
+            "mut_std": 10, 
+            "nMut":1
+            }
         }
     ]
 }

@@ -13,15 +13,21 @@ def main(jobfilepath):
     # Run the comprehensive analysis
     simulation_parms = None
     with open(jobfilepath) as jsonFile:
-        simulation_parms = json.load(jsonFile)
+        job = json.load(jsonFile)
     
-    if "jobType" not in simulation_parms or simulation_parms["jobType"] == "batchrun":
-        evolution_df, final_agents_df = run_multiple_simulations(**simulation_parms)
+    if "jobType" not in job: job["jobType"] = "batchrun"
+    if "seed" not in job: job["seed"] = 42
+
+    if job["jobType"] == "batchrun":
+        evolution_df, final_agents_df = run_multiple_simulations(job["scenarios"], 
+                                                                 job["sharedParameters"],
+                                                                 job["replications"],
+                                                                 job["seed"])
     elif simulation_parms["jobType"] == "animate":
         raise NotImplementedError() # TODO batch animations 
     
     # Create all the analysis plots
-    create_comprehensive_analysis(simulation_parms["scenarios"], evolution_df, final_agents_df)
+    create_comprehensive_analysis(job["scenarios"], evolution_df, final_agents_df)
     
     print("\nAnalysis complete! Check the plots for insights into risk aversion effects.")
 

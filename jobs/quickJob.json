@@ -1,17 +1,23 @@
 {
-    "gridSize":[3,3],
-    "games": 10,
-    "rounds": 500,
-    "replications":3,
+    "jobName": "fastJob",
     "jobtype": "batchrun",
+    "replications":3,
+    "seed": 42,
+    "sharedParameters":{
+        "gridDim":[3,3],
+        "games": 10,
+        "n_rounds": 10
+        },
     "scenarios": [
-        {"name": "Test",   
-         "bounds": [0.0, 1.0], 
-         "nRecombine":5, 
-         "weightRecombine":0.5, 
-         "mut_std": 10, 
-         "nMut":1,
-         "color": "red"
+        {"name": "Risk Seeking",
+         "color": "red",
+         "parameters":{
+            "ra_bounds": [0.0, 0.3], 
+            "nRecombine":5, 
+            "weightRecombine":0.5, 
+            "mut_std": 10, 
+            "nMut":1
+            }
         }
     ]
 }
