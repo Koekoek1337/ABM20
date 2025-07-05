@@ -165,7 +165,7 @@ def create_comprehensive_analysis(scenarios, evolution_df, final_agents_df):
     for scenario in scenarios:
         scenario_data = final_agents_df[final_agents_df['scenario'] == scenario['name']]
         if not scenario_data.empty:
-            print(f"\n{scenario['name']} (RA bounds: {scenario['bounds']}):")
+            print(f"\n{scenario['name']} (RA bounds: {scenario["parameters"]['ra_bounds']}):")
             print(f"  Number of agents: {len(scenario_data)}")
             print(f"  Average Risk Aversion: {scenario_data['risk_aversion'].mean():.3f} ± {scenario_data['risk_aversion'].std():.3f}")
             print(f"  Average Final Wealth: {scenario_data['wealth'].mean():.2f} ± {scenario_data['wealth'].std():.2f}")
