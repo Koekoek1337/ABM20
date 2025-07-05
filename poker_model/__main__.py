@@ -4,6 +4,7 @@ import pathlib
 
 from simulation.running import run_multiple_simulations
 from simulation.analysis import create_comprehensive_analysis, sensitivity_analysis
+from simulation.animate import batchAnimations
 
 # TODO: Add new model parameters to run_multiple
 def main(jobfilepath):
@@ -23,12 +24,11 @@ def main(jobfilepath):
                                                                  job["sharedParameters"],
                                                                  job["replications"],
                                                                  job["seed"])
-    elif simulation_parms["jobType"] == "animate":
-        raise NotImplementedError() # TODO batch animations 
+        # Create all the analysis plots
+        create_comprehensive_analysis(job["scenarios"], evolution_df, final_agents_df)
+    elif job["jobType"] == "animate":
+        batchAnimations(job["scenarios"], job["sharedParameters"], job["seed"])
     
-    # Create all the analysis plots
-    create_comprehensive_analysis(job["scenarios"], evolution_df, final_agents_df)
-
     if "sens_analysis" in job and job["sens_analysis"] == True:
         sensitivity_analysis(num_samples=job.get("num_samples", 32))
     

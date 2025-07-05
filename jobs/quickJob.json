@@ -1,6 +1,6 @@
 {
     "jobName": "fastJob",
-    "jobtype": "batchrun",
+    "jobType": "animate",
     "replications":3,
     "seed": 42,
     "sharedParameters":{
@@ -20,5 +20,5 @@
             }
         }
     ],
-    "sens_analysis": true
+    "sens_analysis": false
 }
