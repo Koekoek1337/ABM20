@@ -4,9 +4,23 @@ import matplotlib.animation as animation
 
 from game_classes.model import SpatialModel
 
+from simulation.running import run_single_simulation
+
 from typing import List, Dict, Any
 
 DEFAULT_FILELOCATION = "./out_animation.gif"
+def batchAnimations(scenarios: List[Dict[str, Any]], sharedParameters: Dict[str,Any], seed=42):
+    for scenario in scenarios:
+        scenario["parameters"] = scenario["parameters"] | sharedParameters
+        scenario["parameters"]["seed"] = seed
+        print(f"\n{'='*50}")
+        print(f"SCENARIO: {scenario['name']} (RA: {scenario["parameters"]['ra_bounds']})")
+        print(f"{'='*50}")
+        
+        scenario_results = []
+        model, evolution_data = run_single_simulation(scenario["parameters"])
+        createAnimation(model, False, f"{scenario["name"]}.gif")
+
 
 def createAnimation(Model: SpatialModel, showAnimation = False, savePath=DEFAULT_FILELOCATION):
     """
@@ -82,7 +96,7 @@ class PokerAnimator:
         
         return self.im
 
-    def agentInfo(self, frame_idx:int) -> Dict[Any]:
+    def agentInfo(self, frame_idx:int) -> Dict[str, Any]:
         """Get agent positions and strategies at this frame"""
         agents_info = {}
         for agent in self.M.agents:
