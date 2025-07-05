@@ -8,13 +8,12 @@ from .game   import Game
 from typing import List
 
 class SpatialModel(Model):
-    def __init__(self, gridDim=(10,10), n_rounds=1, games_per_step=1, seed=None, agentType = "evo", ra_bounds = (0, 1),
+    def __init__(self, gridDim=(10,10), n_rounds=1, seed=None, agentType = "evo", ra_bounds = (0, 1),
                     nRecombine=5, weightRecombine = 0.5, mut_std= 10, nMut=1):
         super().__init__(seed=seed)
         self.rng          = np.random.default_rng(seed)
         self.gridDim      = gridDim
         self.n_rounds     = n_rounds  # rounds per game
-        self.games_per_step = games_per_step  # games per step
         
         # Create grid - using MultiGrid for better compatibility
         self.grid = MultiGrid(gridDim[0], gridDim[1], torus=True)
