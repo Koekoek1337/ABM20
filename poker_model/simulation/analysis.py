@@ -1,7 +1,12 @@
 import pandas as pd
 import numpy as np
+from SALib.sample import saltelli
+from SALib.analyze import sobol
+from typing import Dict, Any
+from copy import copy
+import tqdm
 
-from simulation.analysis_plots import plot_comprehensive_analysis
+from simulation.analysis_plots import plot_comprehensive_analysis, p_sensitivity_analysis
 
 from game_classes.model import SpatialModel
 
@@ -61,7 +66,6 @@ def analyze_step(model:SpatialModel, step:int):
     }
     return outDict
 
-
 def calculate_gini(wealth_array):
     """Calculate Gini coefficient for wealth inequality"""
     if len(wealth_array) == 0:
@@ -81,6 +85,71 @@ def calculate_gini(wealth_array):
     # Calculate Gini coefficient
     gini = (2 * np.sum((np.arange(1, n+1) * sorted_wealth))) / (n * np.sum(sorted_wealth)) - (n + 1) / n
     return max(0, gini)  # Ensure non-negative
+
+# This is a copy of what is in running.py. Put it here to avoid circular imports.
+def run_single_simulation(modelParameters: Dict[str, Any]):
+    """Run a single simulation with given risk aversion bounds"""
+    ra_bounds = modelParameters["ra_bounds"]
+    print(f"Running simulation with RA bounds: {ra_bounds}")
+    games = modelParameters["games"]
+    modelParameters = copy(modelParameters)
+    modelParameters.pop("games")
+    
+    M = SpatialModel(**modelParameters)
+    
+    # Track evolution metrics
+    evolution_data = {
+        'step': [],
+        'avg_risk_aversion': [],
+        'std_risk_aversion': [],
+        'total_wealth': [],
+        'wealth_gini': [],
+        'max_wealth': [],
+        'min_wealth': [],
+        'ra_wealth_correlation': []
+    }
+    
+    for game in range(games):
+        # print(f"  Game {game+1}/{games}")
+        M.step()
+        
+        # Calculate metrics after each step
+        step_data = analyze_step(M, game)
+        for key, value in step_data.items():
+            evolution_data[key].append(value)
+    
+    return M, evolution_data
+
+
+def sensitivity_analysis(num_samples:int=4):
+    problem = {
+        'num_vars': 5,
+        'names': ['ra_mean', 'n_recombine', 'weight_recombine', 'mut_std', 'n_mut'],
+        'bounds': [[0.15, 0.85], [1, 10], [0.1, 0.9], [1, 100], [1, 10]]
+    }
+
+    param_values = saltelli.sample(problem, num_samples, calc_second_order=False)
+
+    Y = []
+    for ra_mean, n_recombine, weight_recombine, mut_std, n_mut in tqdm.tqdm(param_values, desc="Running simulations"):
+        modelParameters = {
+            "ra_bounds": [ra_mean - 0.15, ra_mean + 0.15], 
+            "nRecombine": int(n_recombine), 
+            "weightRecombine": weight_recombine, 
+            "mut_std": int(mut_std), 
+            "nMut": int(n_mut),
+            "gridDim": (8, 8),
+            "games": 100,
+            "n_rounds": 1,
+            }
+        M, agents_df = run_single_simulation(modelParameters)
+        mean_wealth = np.array(agents_df['total_wealth']).mean()
+        Y.append(mean_wealth)
+
+    Y = np.array(Y)
+    Si = sobol.analyze(problem, Y, calc_second_order=False, print_to_console=True)
+
+    p_sensitivity_analysis(Si, problem)
 
 
 def create_comprehensive_analysis(scenarios, evolution_df, final_agents_df):

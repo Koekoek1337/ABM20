@@ -238,6 +238,27 @@ def p_wealthDensity(fig: plt.Figure, scenario: Dict[str, Any], evolution_df: Dat
     ax.set_ylabel('Final Wealth')
     ax.grid(True, alpha=0.3)
 
+def p_sensitivity_analysis(Si: Dict[str, Any], problem: Dict[str, Any]):
+    fig, ax = plt.subplots(1, 2, figsize=(12, 8))
+    
+    indices = Si['S1']
+    names = problem['names']
+    ax[0].bar(names, indices, alpha=0.7)
+    ax[0].set_title('Sobol First-order Sensitivity Index')
+    ax[0].set_ylabel('First-order Sobol Index')
+    for i, v in enumerate(indices):
+        ax[0].text(i, v + 0.02, f"{v:.2f}", ha='center')
+    
+    indices = Si['ST']
+    names = problem['names']
+    ax[1].bar(names, indices, alpha=0.7)
+    ax[1].set_title('Sobol Total Sensitivity Index')
+    ax[1].set_ylabel('Total Sobol Index')
+    for i, v in enumerate(indices):
+        ax[1].text(i, v + 0.02, f"{v:.2f}", ha='center')
+    
+    fig.tight_layout()
+    plt.show()
 
 def p_individualScenario(fig: plt.Figure, scenario: Dict[str, Any], evolution_df: DataFrame, 
                          subplot: Tuple[int, int, int]):

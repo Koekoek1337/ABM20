@@ -3,7 +3,7 @@ import argparse
 import pathlib
 
 from simulation.running import run_multiple_simulations
-from simulation.analysis import create_comprehensive_analysis
+from simulation.analysis import create_comprehensive_analysis, sensitivity_analysis
 
 # TODO: Add new model parameters to run_multiple
 def main(jobfilepath):
@@ -28,6 +28,9 @@ def main(jobfilepath):
     
     # Create all the analysis plots
     create_comprehensive_analysis(job["scenarios"], evolution_df, final_agents_df)
+
+    if job["sens_analysis"] == True:
+        sensitivity_analysis(num_samples=job.get("num_samples", 32))
     
     print("\nAnalysis complete! Check the plots for insights into risk aversion effects.")
 
