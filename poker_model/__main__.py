@@ -16,7 +16,7 @@ def main(jobfilepath):
         job = json.load(jsonFile)
     
     if "jobType" not in job: job["jobType"] = "batchrun"
-    if "seed" not in job: job["seed"] = 42
+    if "seed" not in job: job["seed"] = None
 
     if job["jobType"] == "batchrun":
         evolution_df, final_agents_df = run_multiple_simulations(job["scenarios"], 
@@ -29,7 +29,7 @@ def main(jobfilepath):
     # Create all the analysis plots
     create_comprehensive_analysis(job["scenarios"], evolution_df, final_agents_df)
 
-    if job["sens_analysis"] == True:
+    if "sens_analysis" in job and job["sens_analysis"] == True:
         sensitivity_analysis(num_samples=job.get("num_samples", 32))
     
     print("\nAnalysis complete! Check the plots for insights into risk aversion effects.")
