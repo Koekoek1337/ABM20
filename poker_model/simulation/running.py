@@ -31,6 +31,7 @@ def run_multiple_simulations(scenarios: List[Dict[str, Any]], sharedParameters: 
             
             # Use different seeds for each replication
             seed = SEED_GENERATOR.choice(2**32)
+            scenario["parameters"]["seed"] = seed
             
             model, evolution_data = run_single_simulation(
                 scenario["parameters"] 
