@@ -1,0 +1,7 @@
+mesa
+numpy
+matplotlib
+pandas
+SALib
+seaborn
+pokerpy @ git+https://github.com/glpcc/PokerPy
