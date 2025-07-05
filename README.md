@@ -22,6 +22,7 @@ Simulation parameters are loaded from JSON-formatted "job" files. An example job
 - `sharedParameters`: A JSON object containing [simulation parameters](#simulation-parameters) to use for all provided scenarios.
 - `scenarios`: A list of [Scenario](#scenario) JSON objects that contain model properties as well as analytical visualization settings.
 - `sens_analysis`: A boolean value that determines whether sensitivity analysis is performed at the end of the job.
+- `jobType`=`batchrun`: If `batchrun`, the model will run with the given parameters and analyzed over the amount of replications. If `animate`, an animated gif will be generated for all scenarios.
 
 ### Scenario
 Contains the necessary parameters for a single set of simulations for further analysis. 
