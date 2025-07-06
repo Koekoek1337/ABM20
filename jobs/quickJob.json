@@ -1,8 +1,10 @@
 {
     "jobName": "fastJob",
-    "jobType": "animate",
+    "jobType": "batchrun",
     "replications":3,
     "seed": 42,
+    "sens_analysis": false,
+    
     "sharedParameters":{
         "gridDim":[3,3],
         "games": 10,
@@ -19,6 +21,5 @@
             "nMut":1
             }
         }
-    ],
-    "sens_analysis": false
+    ]
 }
