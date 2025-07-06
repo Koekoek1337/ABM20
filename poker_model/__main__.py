@@ -1,3 +1,5 @@
+import pandas as pd
+
 import json
 import argparse
 import pathlib
@@ -25,9 +27,18 @@ def main(jobfilepath):
                                                                  job["replications"],
                                                                  job["seed"])
         # Create all the analysis plots
+        evolution_df.to_csv(f"out/evo_{job["jobname"]}.csv")
+        final_agents_df.to_csv(f"out/f_agents_{job["jobname"]}.csv")
+
         create_comprehensive_analysis(job["scenarios"], evolution_df, final_agents_df)
     elif job["jobType"] == "animate":
         batchAnimations(job["scenarios"], job["sharedParameters"], job["seed"])
+    
+    elif job["jobType"] == "plotdata":
+        for scenario in job["scenarios"]: scenario["parameters"] = job["sharedParameters"] | scenario["parameters"]
+        evolution_df = pd.read_csv(f"out/evo_{job["jobname"]}.csv")
+        final_agents_df = pd.read_csv(f"out/f_agents_{job["jobname"]}.csv")
+        create_comprehensive_analysis(job["scenarios"], evolution_df, final_agents_df)
     
     if "sens_analysis" in job and job["sens_analysis"] == True:
         sensitivity_analysis(num_samples=job.get("num_samples", 32))
