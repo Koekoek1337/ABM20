@@ -47,8 +47,8 @@ def plot_comprehensive_analysis(scenarios: List[Dict[str, Any]], evolution_df: D
     p_riskWealthScatter(fig, scenarios, evolution_df, final_agents_df, subplots[subplot_id])
     subplot_id += 1
     # 7. Average Final Metrics by Scenario
-    p_finMetric(fig, scenarios, evolution_df, final_agents_df, subplots[subplot_id])
-    subplot_id += 1
+    # p_finMetric(fig, scenarios, evolution_df, final_agents_df, subplots[subplot_id])
+    # subplot_id += 1
     # 8. Wealth vs Risk Aversion Density Plot
     p_wealthDensity(fig, scenarios, evolution_df, final_agents_df, subplots[subplot_id])
     subplot_id += 1
@@ -56,6 +56,7 @@ def plot_comprehensive_analysis(scenarios: List[Dict[str, Any]], evolution_df: D
     for scenario in scenarios:
         p_individualScenario(fig, scenario, evolution_df, subplots[subplot_id])
         subplot_id += 1
+    
 
     plt.tight_layout()
     plt.show()
