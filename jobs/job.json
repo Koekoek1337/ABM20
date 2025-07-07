@@ -1,6 +1,6 @@
 { 
     "jobname": "job_evo",
-    "jobType": "plotdata",
+    "jobType": "batchrun",
     "replications":3,
     "seed": 42,
     "sens_analysis": true,
