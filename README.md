@@ -16,13 +16,15 @@ To use the program, clone the repository to your device. Then from the root fold
 Simulation parameters are loaded from JSON-formatted "job" files. An example jobfile has been provided in `/root/jobs/jobExample.json` and an explaination of relevant properties has been provided below.
 
 ### Root properties
-- [Optional] `jobName`: Name of the specific job for user-readability. May be used as documentation of the purpose of the job.
+- `jobName`: Name of the specific job. Determines the filename of the resultfiles when batchrunning or loading previous data.
 - `replications`: Amount of repeat runs for every set of scenario parameters for statistical analysis.
 - [Optional] `seed`: Seed for the seed generator of sucessive runs. If no seed has ben given, a random seed wil be used instead.
 - `sharedParameters`: A JSON object containing [simulation parameters](#simulation-parameters) to use for all provided scenarios.
 - `scenarios`: A list of [Scenario](#scenario) JSON objects that contain model properties as well as analytical visualization settings.
 - `sens_analysis`: A boolean value that determines whether sensitivity analysis is performed at the end of the job.
-- `jobType`=`batchrun`: If `batchrun`, the model will run with the given parameters and analyzed over the amount of replications. If `animate`, an animated gif will be generated for all scenarios.
+- `jobType`=`batchrun`: If `batchrun`, the model will run with the given parameters and analyzed over the amount of replications. 
+                        If `animate`, an animated gif will be generated for all scenarios.
+                        If `plotdata`, previous results from jobs with the same `jobName` will be loaded and plotted.
 
 ### Scenario
 Contains the necessary parameters for a single set of simulations for further analysis. 

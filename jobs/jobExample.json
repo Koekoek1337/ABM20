@@ -1,11 +1,12 @@
-{
-    "jobName": "job",
-    "jobtype": "batchrun",
+{ 
+    "jobname": "job_evo",
+    "jobType": "batchrun",
     "replications":3,
     "seed": 42,
+    "sens_analysis": true,
     "sharedParameters":{
         "gridDim":[8,8],
-        "games": 50,
+        "games": 25,
         "n_rounds": 500
         },
     "scenarios": [

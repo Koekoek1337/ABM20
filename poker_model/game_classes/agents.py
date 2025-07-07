@@ -6,8 +6,6 @@ from typing import List, Tuple
 
 RAISELIM   = 0
 CALL_LIM   = 1
-BLUFF_PROB = 2
-BLUFF_SIZE = 3
 
 MAX_BET = 400
 
@@ -159,17 +157,6 @@ class fixedRiskAgent(Agent):
         """Adjust call limit based on risk aversion"""
         risk_factor = (1 - self.risk_aversion)
         return base_call * (0.7 + 0.3 * risk_factor)
-
-    def _risk_adjusted_bluff_prob(self, base_prob, strength):
-        """Adjust bluffing probability based on risk aversion"""
-        weak = 1 - strength
-        risk_bluff_bonus = (1 - self.risk_aversion) * self._sigmoid(weak) * 0.3
-        return (base_prob / MAX_BET) + risk_bluff_bonus
-
-    def _risk_adjusted_bluff_size(self, base_size, strength):
-        """Adjust bluff size based on risk aversion"""
-        risk_factor = (1 - self.risk_aversion)
-        return base_size * (0.5 + 0.5 * risk_factor)
 
     def _neighbor_selection(self) -> Tuple[List[Agent], List[float]]:
         """
